@@ -24,6 +24,8 @@ const baseTheme = createTheme({
         divider: '#BDBDBD', // Разделители
     },
     components: {
+
+
         MuiCheckbox: {
             styleOverrides: {
                 root: {
@@ -31,6 +33,26 @@ const baseTheme = createTheme({
                     '&.Mui-checked': {
                         color: '#388E3C',
                     },
+                },
+            },
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    textTransform: 'none',
+                    transition: 'all 0.2s ease',
+                },
+            },
+        },
+        MuiTextField: {
+            defaultProps: {
+                variant: 'filled',
+            },
+        },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 },
             },
         },
@@ -49,6 +71,15 @@ const baseTheme = createTheme({
                 },
             },
         },
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    borderRadius: 6,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                }
+            }
+        },
+
     },
     shape: {
         borderRadius: 7,
@@ -64,6 +95,7 @@ const baseTheme = createTheme({
             fontWeight: 500,
         },
     },
+
 });
 
 export default baseTheme;
