@@ -1,65 +1,127 @@
 'use client';
-import { useState } from 'react';
-import { Box, Button, Container, Dialog, Typography, IconButton, DialogTitle, DialogContent, Grid } from '@mui/material';
-import { ArrowForward, Close } from '@mui/icons-material';
+import { useState, useEffect } from 'react';
+import {
+    Box,
+    Button,
+    Container,
+    Dialog,
+    Typography,
+    IconButton,
+    CircularProgress,
+    useMediaQuery,
+    AlertTitle,
+    Alert
+} from '@mui/material';
+import {ArrowForward, Close, Lightbulb} from '@mui/icons-material';
 import Link from 'next/link';
-import theme from './_config/theme';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from './_stores/authStore';
+import { useTheme } from '@mui/material/styles';
+import TipsAndUpdates from '@mui/icons-material/TipsAndUpdates';
+import Cookies from "js-cookie";
 
 interface Category {
     name: string;
+    description: string;
     range: [number, number];
     color: string;
 }
 
 export default function HomePage() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [openCategory, setOpenCategory] = useState<Category | null>(null);
+    const isAuthenticated = Cookies.get("isAuthenticated");
+    console.log(isAuthenticated)
+    const router = useRouter();
+    const [fact, setFact] = useState<string>('');
+    const [loadingFact, setLoadingFact] = useState<boolean>(false);
 
+    useEffect(() => {
+        if (isAuthenticated!="1") {
+            router.push('/login');
+        }
+    }, [isAuthenticated, router]);
+
+    useEffect(() => {
+        const fetchFact = async () => {
+            setLoadingFact(true);
+            try {
+                // Заглушка вместо реального API
+                const mockFact = "Для запоминания сложных правил создавайте ассоциации с знакомыми образами - это повышает эффективность обучения на 40%";
+                setFact(mockFact);
+
+                // Реальный запрос будет выглядеть так:
+                // const response = await fetch('/api/v1/fact');
+                // const data = await response.json();
+                // setFact(data.fact);
+            } catch (error) {
+                console.error('Error fetching fact:', error);
+                setFact("Не удалось загрузить лайфхак. Попробуйте обновить страницу.");
+            } finally {
+                setLoadingFact(false);
+            }
+        };
+
+        fetchFact();
+    }, []);
+    {/*Тут короче это самое данные для категорий туда сюда*/}
     const categories: Category[] = [
         {
-            name: 'Лексика',
+            name: '📒 Лексика',
+            description:"Правильное употребление слов",
             range: [5, 8],
             color: theme.palette.primary.light
         },
         {
-            name: 'Орфография',
+            name: '🖊️ Орфография',
+            description:"Правописание букв в словах",
             range: [9, 15],
             color: theme.palette.primary.light
         },
         {
-            name: 'Пунктуация',
+            name: '📃 Пунктуация',
+            description:"Знаки препинания в предложениях",
             range: [16, 21],
             color: theme.palette.primary.light
         },
         {
-            name: 'Работа с текстом',
+            name: '📖 Текст',
+            description:"Чтение и анализ содержимого текста",
             range: [22, 26],
             color: theme.palette.primary.light
         }
     ];
-
+    if (isAuthenticated!="1") {
+        return <Container maxWidth="md" sx={{ py: 3 }} />;
+    }
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography variant="h3" sx={{
-                mb: 4,
+        <Container
+            maxWidth="md" // Более узкий контейнер
+            sx={{
+                py: 3,
+                px: { xs: 1.5, sm: 1 }, // Компактные отступы
+            }}
+        >
+            <Typography variant="h5" sx={{
+                mb: 6, // Меньший отступ
                 fontWeight: 700,
-                textAlign: 'center'
+                textAlign: 'center',
+                color: 'text.primary',
+                fontSize: isMobile ? '1.25rem' : '1.7rem'
             }}>
-                Выберите раздел
+                Раздел заданий
             </Typography>
 
-            {/* Контейнер с CSS Grid */}
+            {/* Компактная сетка */}
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: 'repeat(2, 1fr)',
-                        md: 'repeat(4, 1fr)'
-                    },
-                    gap: 2,
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: 3,
                     '& > *': {
-                        aspectRatio: '1 / 1',
-                        minHeight: 240
+                        maxHeight: isMobile ? 130 : 140, // Уменьшенная высота
+                        width: '100%'
                     }
                 }}
             >
@@ -68,103 +130,165 @@ export default function HomePage() {
                         key={category.name}
                         onClick={() => setOpenCategory(category)}
                         sx={{
-                            height: '100%',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            borderRadius: 4,
+                            borderRadius: 3,
                             background: category.color,
-                            p: 3,
-                            transition: 'all 0.3s',
+                            p: 1.5, // Меньшие внутренние отступы
+                            aspectRatio: '3/2',
+                            transition: 'all 0.2s ease',
                             '&:hover': {
-                                transform: 'translateY(-4px)',
-                                boxShadow: 3
+                                transform: 'translateY(-2px)',
+                                boxShadow: 2
                             }
                         }}
                     >
                         <Typography
-
-                            variant="h4"
+                            variant="body1"
                             sx={{
                                 fontWeight: 600,
-                                mb: 1,
-                                color:theme.palette.text.primary,
-                                textAlign: 'center'
+                                mb: 0.5,
+                                textAlign: 'center',
+                                color: 'text.primary',
+                                fontSize: isMobile ? '0.875rem' : '1.5rem'
                             }}
                         >
                             {category.name}
+
                         </Typography>
-                        <ArrowForward sx={{ fontSize: 40 }} />
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                fontWeight: 600,
+                                mb: 0.5,
+                                textAlign: 'center',
+                                color: 'text.primary',
+                                fontSize: isMobile ? '0.875rem' : '1rem'
+                            }}
+                        >
+                            {category.description}
+
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'text.secondary',
+                                fontSize: '0.75rem'
+                            }}
+                        >
+                            Задания {category.range[0]}-{category.range[1]}
+                        </Typography>
+                        <ArrowForward sx={{
+                            fontSize: isMobile ? 20 : 24,
+                            mt: 0.5
+                        }} />
                     </Button>
                 ))}
             </Box>
 
-            {/* Модальное окно (остается без изменений) */}
+
+            {/*Лайфхак*/}
+            <Alert
+                severity="info"
+                icon={<TipsAndUpdates fontSize="small" />}
+                sx={{
+                    borderRadius: 2,
+                    marginTop: 5,
+                    bgcolor: 'surfaceContainerLow.main',
+                    color: 'onSurfaceVariant.main',
+                    border: 'none',
+                    '& .MuiAlert-icon': {
+                        color: 'primary.main',
+                        alignItems: 'center'
+                    }
+                }}
+            >
+                <AlertTitle sx={{
+                    fontWeight: 600,
+                    mb: 0.5,
+                    color: 'onSurface.main'
+                }}>
+                    Полезный лайфхак
+                </AlertTitle>
+                {loadingFact ? (
+                    <Box display="flex" justifyContent="center">
+                        <CircularProgress size={20} color="inherit" />
+                    </Box>
+                ) : (
+                    <Typography variant="body2" component="div" sx={{ color: 'onSurfaceVariant.main' }}>
+                        {fact || "Для лучшего запоминания правил пробуйте объяснять их своими словами"}
+                    </Typography>
+                )}
+            </Alert>
+
+
+            {/* Модальное окно */}
             <Dialog
                 open={!!openCategory}
                 onClose={() => setOpenCategory(null)}
-                maxWidth="sm"
                 fullWidth
+                maxWidth="xs" // Более компактное окно
                 PaperProps={{
-                    sx: {
-                        borderRadius: 4,
-                        bgcolor: 'background.paper'
+                    xs: {
+                        borderRadius: 2,
+                        m: 1,
+                        maxHeight: '120vh'
                     }
                 }}
             >
                 {openCategory && (
                     <>
-                        <DialogTitle sx={{
+                        <Box sx={{
+                            p: 2,
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            py: 3
+                            borderColor: 'divider'
                         }}>
-                            <Typography variant="h5" fontWeight={600}>
+                            <Typography variant="subtitle1" fontWeight={600}>
                                 {openCategory.name}
                             </Typography>
-                            <IconButton onClick={() => setOpenCategory(null)}>
-                                <Close />
-                            </IconButton>
-                        </DialogTitle>
 
-                        <DialogContent sx={{ p: 4 }}>
-                            <Grid container spacing={4}>
-                                {Array.from(
-                                    { length: openCategory.range[1] - openCategory.range[0] + 1 },
-                                    (_, i) => {
-                                        const taskNumber = openCategory.range[0] + i;
-                                        //@ts-ignore
-                                        return (
-                                            <Grid item xs={2} sm={2} key={taskNumber}>
-                                                <Button
-                                                    component={Link}
-                                                    href={`/theory?q=${taskNumber}`}
-                                                    variant="contained"
-                                                    fullWidth
-                                                    sx={{
-                                                        height: 80,
-                                                        borderRadius: 2,
-                                                        marginTop:3,
-                                                        background: theme.palette.primary.light,
-                                                        fontWeight: 500,
-                                                        fontSize: '1.1rem',
-                                                        display: 'flex',
-                                                        flexDirection: 'column'
-                                                    }}
-                                                >
-                                                    <span>Задание</span>
-                                                    <span>№{taskNumber}</span>
-                                                </Button>
-                                            </Grid>
-                                        );
-                                    }
-                                )}
-                            </Grid>
-                        </DialogContent>
+
+                            <IconButton onClick={() => setOpenCategory(null)} size="small">
+                                <Close fontSize="small" />
+                            </IconButton>
+                        </Box>
+
+                        <Box sx={{
+                            p: 2,
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gap: 1.5
+                        }}>
+                            {Array.from(
+                                { length: openCategory.range[1] - openCategory.range[0] + 1 },
+                                (_, i) => {
+                                    const taskNumber = openCategory.range[0] + i;
+                                    return (
+                                        <Button
+                                            key={taskNumber}
+                                            component={Link}
+                                            href={`/theory?q=${taskNumber}`}
+                                            variant="outlined"
+                                            size="small"
+                                            sx={{
+                                                height: 80,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                flexDirection: 'column'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '1rem' }}>Задание</span>
+                                            <span>№{taskNumber}</span>
+                                        </Button>
+                                    );
+                                }
+                            )}
+                        </Box>
                     </>
                 )}
             </Dialog>

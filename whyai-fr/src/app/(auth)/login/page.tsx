@@ -11,6 +11,8 @@ import NextLink from 'next/link';
 import theme from '../../_config/theme';
 import config from '../../_config/app';
 import Image from "next/image";
+import {router} from "next/client";
+import { useRouter } from 'next/navigation';
 const schema = z.object({
     email: z.string().email('Неправильная почта').min(1, 'Required'),
     password: z.string().min(8, 'Минимум 8 символов'),
@@ -20,6 +22,7 @@ const MotionButton = motion.create(Button);
 
 export default function LoginPage() {
     const { setAuth } = useAuthStore();
+    const router = useRouter();
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
         resolver: zodResolver(schema),
     });
@@ -27,7 +30,11 @@ export default function LoginPage() {
     const onSubmit = async (data: any) => {
         try {
             const response = await apiClient.post(config.api.endpoints.login, data);
-            setAuth(response.data.token, data.email);
+            console.log(response.data.token);
+            localStorage.setItem("token", response.data.token);
+            setAuth(response.data.token);
+            console.log("start push")
+            router.push('/');
         } catch (error) {
             console.error('Ошибка логина:', error);
         }
@@ -54,7 +61,7 @@ export default function LoginPage() {
                         display: 'flex',
                         alignItems: 'center', // Вертикальное выравнивание по центру
                         justifyContent: 'center', // Горизонтальное выравнивание по центру
-                        gap: 0, // Отступ между элементами
+                        gap: 4, // Отступ между элементами
                         fontWeight: 700,
                         background: theme.palette.primary.main,
                         WebkitBackgroundClip: 'text',
@@ -79,7 +86,7 @@ export default function LoginPage() {
                     />
                 </Typography>
 
-                <Stack component="form" spacing={3} onSubmit={handleSubmit(onSubmit)}>
+                <Stack component="form" spacing={4} onSubmit={handleSubmit(onSubmit)}>
                     <TextField
                         label="Почта"
                         variant="filled"
@@ -89,7 +96,7 @@ export default function LoginPage() {
                         helperText={errors.email?.message?.toString()}
                         sx={{
                             '& .MuiFilledInput-root': {
-                                borderRadius: 1,
+                                borderRadius: 3,
                                 bgcolor: 'background.default'
                             }
                         }}
@@ -105,7 +112,8 @@ export default function LoginPage() {
                         helperText={errors.password?.message?.toString()}
                         sx={{
                             '& .MuiFilledInput-root': {
-                                borderRadius: 2,
+                                marginBottom:3,
+                                borderRadius: 3,
                                 bgcolor: 'background.default'
                             }
                         }}
@@ -121,7 +129,7 @@ export default function LoginPage() {
                         whileTap={{ scale: 0.98 }}
                         sx={{
                             height: 48,
-                            borderRadius: 2,
+                            borderRadius: 3,
                             fontWeight: 600,
                             bgcolor: 'primary.main',
                             '&:hover': {
@@ -140,7 +148,7 @@ export default function LoginPage() {
                             startIcon={<Google />}
                             sx={{
                                 flex: 1,
-                                borderRadius: 2,
+                                borderRadius: 3,
                                 textTransform: 'none',
                                 py: 1.5
                             }}
