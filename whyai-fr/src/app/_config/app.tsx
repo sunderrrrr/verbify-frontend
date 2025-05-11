@@ -6,6 +6,7 @@ const config = {
             login: '/auth/sign-in',
             register: '/auth/sign-up',
             refresh: '/auth/refresh',
+            theory: '/theory/'
         },
     },
 };

@@ -24,12 +24,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
     // Установка авторизации
     setAuth: (token) => {
         Cookies.set('authToken', token, {
-            expires: 7,
+            expires: 0.5,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict'
         });
         Cookies.set('isAuthenticated', "1", {
-            expires: 7,
+            expires: 0.5,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict'
         });
@@ -39,6 +39,10 @@ export const useAuthStore = create<AuthState>()((set) => ({
     // Выход из системы
     logout: () => {
         Cookies.remove('authToken');
-        set({ token: null, isAuthenticated: false });
+        Cookies.set('isAuthenticated', "0", {
+            expires: 7,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
     }
 }));

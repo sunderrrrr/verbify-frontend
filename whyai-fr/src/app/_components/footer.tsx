@@ -70,7 +70,7 @@ export function Footer() {
                         variant="caption"
                         color="text.secondary"
                     >
-                        © {new Date().getFullYear()} WhyAI. Все права защищены.
+                        © {new Date().getFullYear()} WhyAI. Все права защищены. В разработке.
                     </Typography>
 
                     <Box sx={{ display: 'flex', gap: 0 }}>

@@ -10,7 +10,9 @@ import {
     CircularProgress,
     useMediaQuery,
     AlertTitle,
-    Alert
+    Alert,
+    keyframes,
+    styled
 } from '@mui/material';
 import {ArrowForward, Close, Lightbulb} from '@mui/icons-material';
 import Link from 'next/link';
@@ -27,12 +29,22 @@ interface Category {
     color: string;
 }
 
+// Анимация fadeIn
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+// Стилизованный контейнер с анимацией
+const FadeContainer = styled(Box)(({ theme }) => ({
+    animation: `${fadeIn} 0.5s ease-out both`,
+}));
+
 export default function HomePage() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [openCategory, setOpenCategory] = useState<Category | null>(null);
     const isAuthenticated = Cookies.get("isAuthenticated");
-    console.log(isAuthenticated)
     const router = useRouter();
     const [fact, setFact] = useState<string>('');
     const [loadingFact, setLoadingFact] = useState<boolean>(false);
@@ -47,14 +59,8 @@ export default function HomePage() {
         const fetchFact = async () => {
             setLoadingFact(true);
             try {
-                // Заглушка вместо реального API
                 const mockFact = "Для запоминания сложных правил создавайте ассоциации с знакомыми образами - это повышает эффективность обучения на 40%";
                 setFact(mockFact);
-
-                // Реальный запрос будет выглядеть так:
-                // const response = await fetch('/api/v1/fact');
-                // const data = await response.json();
-                // setFact(data.fact);
             } catch (error) {
                 console.error('Error fetching fact:', error);
                 setFact("Не удалось загрузить лайфхак. Попробуйте обновить страницу.");
@@ -65,7 +71,7 @@ export default function HomePage() {
 
         fetchFact();
     }, []);
-    {/*Тут короче это самое данные для категорий туда сюда*/}
+
     const categories: Category[] = [
         {
             name: '📒 Лексика',
@@ -92,149 +98,160 @@ export default function HomePage() {
             color: theme.palette.primary.light
         }
     ];
+
     if (isAuthenticated!="1") {
         return <Container maxWidth="md" sx={{ py: 3 }} />;
     }
+
     return (
         <Container
-            maxWidth="md" // Более узкий контейнер
+            maxWidth="md"
             sx={{
                 py: 3,
-                px: { xs: 1.5, sm: 1 }, // Компактные отступы
+                px: { xs: 1.5, sm: 1 },
             }}
         >
-            <Typography variant="h5" sx={{
-                mb: 6, // Меньший отступ
-                fontWeight: 700,
-                textAlign: 'center',
-                color: 'text.primary',
-                fontSize: isMobile ? '1.25rem' : '1.7rem'
-            }}>
-                Раздел заданий
-            </Typography>
-
-            {/* Компактная сетка */}
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: 3,
-                    '& > *': {
-                        maxHeight: isMobile ? 130 : 140, // Уменьшенная высота
-                        width: '100%'
-                    }
-                }}
-            >
-                {categories.map((category) => (
-                    <Button
-                        key={category.name}
-                        onClick={() => setOpenCategory(category)}
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            borderRadius: 3,
-                            background: category.color,
-                            p: 1.5, // Меньшие внутренние отступы
-                            aspectRatio: '3/2',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: 2
-                            }
-                        }}
-                    >
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                fontWeight: 600,
-                                mb: 0.5,
-                                textAlign: 'center',
-                                color: 'text.primary',
-                                fontSize: isMobile ? '0.875rem' : '1.5rem'
-                            }}
-                        >
-                            {category.name}
-
-                        </Typography>
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                fontWeight: 600,
-                                mb: 0.5,
-                                textAlign: 'center',
-                                color: 'text.primary',
-                                fontSize: isMobile ? '0.875rem' : '1rem'
-                            }}
-                        >
-                            {category.description}
-
-                        </Typography>
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: 'text.secondary',
-                                fontSize: '0.75rem'
-                            }}
-                        >
-                            Задания {category.range[0]}-{category.range[1]}
-                        </Typography>
-                        <ArrowForward sx={{
-                            fontSize: isMobile ? 20 : 24,
-                            mt: 0.5
-                        }} />
-                    </Button>
-                ))}
-            </Box>
-
-
-            {/*Лайфхак*/}
-            <Alert
-                severity="info"
-                icon={<TipsAndUpdates fontSize="small" />}
-                sx={{
-                    borderRadius: 2,
-                    marginTop: 5,
-                    bgcolor: 'surfaceContainerLow.main',
-                    color: 'onSurfaceVariant.main',
-                    border: 'none',
-                    '& .MuiAlert-icon': {
-                        color: 'primary.main',
-                        alignItems: 'center'
-                    }
-                }}
-            >
-                <AlertTitle sx={{
-                    fontWeight: 600,
-                    mb: 0.5,
-                    color: 'onSurface.main'
+            <FadeContainer>
+                <Typography variant="h5" sx={{
+                    mb: 2,
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    color: 'text.primary',
+                    fontSize: isMobile ? '1.25rem' : '1.7rem'
                 }}>
-                    Полезный лайфхак
-                </AlertTitle>
-                {loadingFact ? (
-                    <Box display="flex" justifyContent="center">
-                        <CircularProgress size={20} color="inherit" />
-                    </Box>
-                ) : (
-                    <Typography variant="body2" component="div" sx={{ color: 'onSurfaceVariant.main' }}>
-                        {fact || "Для лучшего запоминания правил пробуйте объяснять их своими словами"}
-                    </Typography>
-                )}
-            </Alert>
+                    Добрый вечер, username!
+                </Typography>
+                <Typography variant="h1" sx={{
+                    mb: 6,
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    color: 'text.primary',
+                    fontSize: isMobile ? '1rem' : '1.25rem'
+                }}>
+                    Выбери раздел для изучения
+                </Typography>
+            </FadeContainer>
 
+            <FadeContainer>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: 3,
+                        '& > *': {
+                            maxHeight: isMobile ? 130 : 140,
+                            width: '100%'
+                        }
+                    }}
+                >
+                    {categories.map((category) => (
+                        <Button
+                            key={category.name}
+                            onClick={() => setOpenCategory(category)}
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                borderRadius: 3,
+                                background: category.color,
+                                p: 1.5,
+                                aspectRatio: '3/2',
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: 2
+                                }
+                            }}
+                        >
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    fontWeight: 600,
+                                    mb: 0.5,
+                                    textAlign: 'center',
+                                    color: 'text.primary',
+                                    fontSize: isMobile ? '0.875rem' : '1.5rem'
+                                }}
+                            >
+                                {category.name}
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    fontWeight: 600,
+                                    mb: 0.5,
+                                    textAlign: 'center',
+                                    color: 'text.primary',
+                                    fontSize: isMobile ? '0.875rem' : '1rem'
+                                }}
+                            >
+                                {category.description}
+                            </Typography>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: 'text.secondary',
+                                    fontSize: '0.75rem'
+                                }}
+                            >
+                                Задания {category.range[0]}-{category.range[1]}
+                            </Typography>
+                            <ArrowForward sx={{
+                                fontSize: isMobile ? 20 : 24,
+                                mt: 0.5
+                            }} />
+                        </Button>
+                    ))}
+                </Box>
+            </FadeContainer>
 
-            {/* Модальное окно */}
+            <FadeContainer>
+                <Alert
+                    severity="info"
+                    icon={<TipsAndUpdates fontSize="small" />}
+                    sx={{
+                        borderRadius: 2,
+                        marginTop: 5,
+                        bgcolor: 'surfaceContainerLow.main',
+                        color: 'onSurfaceVariant.main',
+                        border: 'none',
+                        '& .MuiAlert-icon': {
+                            color: 'primary.main',
+                            alignItems: 'center'
+                        }
+                    }}
+                >
+                    <AlertTitle sx={{
+                        fontWeight: 600,
+                        mb: 0.5,
+                        color: 'onSurface.main'
+                    }}>
+                        Полезный лайфхак
+                    </AlertTitle>
+                    {loadingFact ? (
+                        <Box display="flex" justifyContent="center">
+                            <CircularProgress size={20} color="inherit" />
+                        </Box>
+                    ) : (
+                        <Typography variant="body2" component="div" sx={{ color: 'onSurfaceVariant.main' }}>
+                            {fact || "Для лучшего запоминания правил пробуйте объяснять их своими словами"}
+                        </Typography>
+                    )}
+                </Alert>
+            </FadeContainer>
+
             <Dialog
                 open={!!openCategory}
                 onClose={() => setOpenCategory(null)}
                 fullWidth
-                maxWidth="xs" // Более компактное окно
+                maxWidth="xs"
                 PaperProps={{
-                    xs: {
+                    sx: {
                         borderRadius: 2,
                         m: 1,
-                        maxHeight: '120vh'
+                        maxHeight: '120vh',
+                        animation: `${fadeIn} 0.3s ease-out`
                     }
                 }}
             >
@@ -251,8 +268,6 @@ export default function HomePage() {
                             <Typography variant="subtitle1" fontWeight={600}>
                                 {openCategory.name}
                             </Typography>
-
-
                             <IconButton onClick={() => setOpenCategory(null)} size="small">
                                 <Close fontSize="small" />
                             </IconButton>
@@ -279,7 +294,12 @@ export default function HomePage() {
                                                 height: 80,
                                                 borderRadius: 2,
                                                 display: 'flex',
-                                                flexDirection: 'column'
+                                                flexDirection: 'column',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: 1
+                                                }
                                             }}
                                         >
                                             <span style={{ fontSize: '1rem' }}>Задание</span>
