@@ -19,6 +19,7 @@ import {
     styled
 } from '@mui/material';
 import { Send, ArrowBack, Delete } from '@mui/icons-material';
+import Script from 'next/script';
 
 const API_BASE_URL = 'http://localhost:8090/api/v1';
 
@@ -136,8 +137,6 @@ export default function ChatPage() {
         };
     };
 
-    // ... (предыдущий код остается без изменений до этого места)
-
     const loadChatHistory = async () => {
         try {
             const headers = getAuthHeaders();
@@ -156,7 +155,7 @@ export default function ChatPage() {
 
             const data = await response.json();
             return (data.result || [])
-                .filter((item: ChatResponseItem) => item?.content && item.role !== 'system') // Фильтруем system сообщения
+                .filter((item: ChatResponseItem) => item?.content && item.role !== 'system')
                 .map((item: ChatResponseItem) => ({
                     id: `msg-${item.id}`,
                     content: item.content,
@@ -169,8 +168,6 @@ export default function ChatPage() {
             return [];
         }
     };
-
-
 
     useEffect(() => {
         if (!taskNumber) return;
@@ -197,7 +194,7 @@ export default function ChatPage() {
                 const initialMessages: Message[] = [
                     {
                         id: 'welcome-msg',
-                        content: `Привет! Я помогу с заданием №${taskNumber}\n\n[Открыть полную теорию](/theory?q=${taskNumber})`,
+                        content: `Привет! Я ИИ для подготовке к **ЕГЭ по русскому языку**\n\n и помогу с заданием №${taskNumber}!\n\n[Открыть полную теорию](/theory?q=${taskNumber})`,
                         isBot: true
                     }
                 ];
@@ -260,7 +257,6 @@ export default function ChatPage() {
         setIsBotTyping(true);
 
         try {
-            // Добавляем сообщение пользователя
             setMessages(prev => [...prev, {
                 id: `user-${Date.now()}`,
                 content: input,
@@ -280,18 +276,28 @@ export default function ChatPage() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Ошибка сервера');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            // Временное решение - перезагрузка страницы после получения ответа
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Неверный формат ответа от сервера');
+            }
+
+            const responseData = await response.json();
+
+            if (!responseData || !responseData.result) {
+                throw new Error('Неверная структура ответа от сервера');
+            }
+
             window.location.reload();
 
         } catch (err) {
             const error = err as Error;
             console.error('Ошибка:', error);
-            setError(error.message);
-            setSnackbarOpen(true);
+            if (error.message.includes('Failed to fetch') || error.message.includes('ERR_EMPTY_RESPONSE')) {
+                setTimeout(() => window.location.reload(), 100);
+            }
         } finally {
             setLoading(false);
             setIsBotTyping(false);
@@ -312,6 +318,12 @@ export default function ChatPage() {
 
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Script
+                src="https://yandex.ru/ads/system/context.js"
+                strategy="afterInteractive"
+                async
+            />
+
             <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'background.paper' }}>
                 <Container maxWidth="md">
                     <Box display="flex" alignItems="center" py={2}>
@@ -404,12 +416,28 @@ export default function ChatPage() {
                                 }}
                             />
                             <Typography variant="body2" sx={{ ml: 1 }}>
-                                Бот печатает...
+                                {process.env.NEXT_PUBLIC_APP_NAME} печатает...
                             </Typography>
                         </TypingIndicator>
                     </MessageContainer>
                 )}
                 <div ref={messagesEndRef} style={{ height: '1px' }} />
+            </Container>
+
+            {/* Рекламный блок Яндекс.Директ перед полем ввода */}
+            <Container maxWidth="md" sx={{ py: 1, textAlign: 'center' }}>
+                <div id="yandex_rtb_R-A-123456-7"></div>
+                <Script id="yandex-ads-script" strategy="afterInteractive">
+                    {`
+                        window.yaContextCb = window.yaContextCb || [];
+                        window.yaContextCb.push(() => {
+                            Ya.Context.AdvManager.render({
+                                renderTo: 'yandex_rtb_R-A-123456-7',
+                                blockId: 'R-A-123456-7'
+                            });
+                        });
+                    `}
+                </Script>
             </Container>
 
             <Box

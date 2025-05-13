@@ -8,6 +8,8 @@ import NextLink from 'next/link';
 import apiClient from '../../_config/api';
 import { Google, GitHub } from '@mui/icons-material';
 import config from '../../_config/app';
+import Image from "next/image";
+import theme from "@/app/_config/theme";
 const schema = z.object({
     email: z.string().email('Некорректный email').min(1, 'Обязательное поле'),
     password: z.string()
@@ -62,19 +64,35 @@ export default function RegisterPage() {
                 }}
             >
                 <Typography
-                    component={motion.div}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
                     variant="h3"
                     gutterBottom
                     sx={{
+                        display: 'flex',
+                        alignItems: 'center', // Вертикальное выравнивание по центру
+                        justifyContent: 'center', // Горизонтальное выравнивание по центру
+                        gap: 1, // Отступ между элементами
                         fontWeight: 700,
-                        color: 'primary.main',
-                        textAlign: 'center',
-                        mb: 4
+                        background: theme.palette.primary.main,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        mb: 2
                     }}
                 >
-                    WhyAI
+                    {process.env.NEXT_PUBLIC_APP_NAME}
+                    <Image
+                        src="/whyai-logo-primary.png"
+                        alt="WhyAI Logo"
+                        width={65}
+                        height={65}
+                        priority
+                        style={{
+                            objectFit: 'contain',
+                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                            // Убираем наследование текстовых стилей
+                            margin: 0,
+                            padding: 0
+                        }}
+                    />
                 </Typography>
 
                 <Stack component="form" spacing={3} onSubmit={handleSubmit(onSubmit)}>

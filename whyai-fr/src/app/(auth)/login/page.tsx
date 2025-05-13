@@ -61,7 +61,7 @@ export default function LoginPage() {
                         display: 'flex',
                         alignItems: 'center', // Вертикальное выравнивание по центру
                         justifyContent: 'center', // Горизонтальное выравнивание по центру
-                        gap: 4, // Отступ между элементами
+                        gap: 1, // Отступ между элементами
                         fontWeight: 700,
                         background: theme.palette.primary.main,
                         WebkitBackgroundClip: 'text',
@@ -69,7 +69,7 @@ export default function LoginPage() {
                         mb: 2
                     }}
                 >
-                    WhyAI
+                    {process.env.NEXT_PUBLIC_APP_NAME}
                     <Image
                         src="/whyai-logo-primary.png"
                         alt="WhyAI Logo"

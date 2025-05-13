@@ -12,15 +12,17 @@ import {
     AlertTitle,
     Alert,
     keyframes,
-    styled
+    styled,
+    Tooltip
 } from '@mui/material';
-import {ArrowForward, Close, Lightbulb} from '@mui/icons-material';
+import { ArrowForward, Close, Lightbulb } from '@mui/icons-material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from './_stores/authStore';
 import { useTheme } from '@mui/material/styles';
 import TipsAndUpdates from '@mui/icons-material/TipsAndUpdates';
 import Cookies from "js-cookie";
+import LockIcon from '@mui/icons-material/Lock';
 
 interface Category {
     name: string;
@@ -29,13 +31,11 @@ interface Category {
     color: string;
 }
 
-// Анимация fadeIn
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
-// Стилизованный контейнер с анимацией
 const FadeContainer = styled(Box)(({ theme }) => ({
     animation: `${fadeIn} 0.5s ease-out both`,
 }));
@@ -46,60 +46,99 @@ export default function HomePage() {
     const [openCategory, setOpenCategory] = useState<Category | null>(null);
     const isAuthenticated = Cookies.get("isAuthenticated");
     const router = useRouter();
-    const [fact, setFact] = useState<string>('');
+    const [currentFact, setCurrentFact] = useState<string>('');
     const [loadingFact, setLoadingFact] = useState<boolean>(false);
+    const [lockedTasks, setLockedTasks] = useState<number[]>([]);
+    const [lockedPractice, setLockedPractice] = useState<string[]>(['ai-test', 'ai-essay']);
 
     useEffect(() => {
-        if (isAuthenticated!="1") {
-            router.push('/login');
-        }
-    }, [isAuthenticated, router]);
-
-    useEffect(() => {
-        const fetchFact = async () => {
+        const fetchFactsAndSetFact = async () => {
             setLoadingFact(true);
             try {
-                const mockFact = "Для запоминания сложных правил создавайте ассоциации с знакомыми образами - это повышает эффективность обучения на 40%";
-                setFact(mockFact);
+                let savedFacts: string[] = JSON.parse(localStorage.getItem('factsList') || '[]');
+                let savedUsed: number[] = JSON.parse(localStorage.getItem('usedFacts') || '[]');
+
+                if (savedFacts.length === 0 || savedUsed.length >= savedFacts.length) {
+                    const response = await fetch('http://localhost:8090/api/v1/fact');
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    if (!data.facts || !Array.isArray(data.facts)) {
+                        throw new Error('Invalid data format');
+                    }
+
+                    savedFacts = data.facts.map((f: { fact: string }) => f.fact);
+                    savedUsed = [];
+                    localStorage.setItem('factsList', JSON.stringify(savedFacts));
+                    localStorage.setItem('usedFacts', JSON.stringify(savedUsed));
+                }
+
+                const availableIndices = savedFacts
+                    .map((_, index) => index)
+                    .filter(index => !savedUsed.includes(index));
+
+                const randomIndex = availableIndices.length > 0
+                    ? availableIndices[Math.floor(Math.random() * availableIndices.length)]
+                    : 0;
+
+                const updatedUsed = [...savedUsed, randomIndex];
+                localStorage.setItem('usedFacts', JSON.stringify(updatedUsed));
+
+                setCurrentFact(savedFacts[randomIndex] || "Нет доступных лайфхаков");
+
             } catch (error) {
-                console.error('Error fetching fact:', error);
-                setFact("Не удалось загрузить лайфхак. Попробуйте обновить страницу.");
+                console.error('Error fetching facts:', error);
+                setCurrentFact("Не удалось загрузить лайфхак. Попробуйте обновить страницу.");
             } finally {
                 setLoadingFact(false);
             }
         };
 
-        fetchFact();
+        fetchFactsAndSetFact();
+    }, []);
+
+    useEffect(() => {
+        if (isAuthenticated !== "1") {
+            router.push('/login');
+        }
+    }, [isAuthenticated, router]);
+
+    useEffect(() => {
+        const array = Array.from({ length: 18 }, (_, i) => i + 9);
+        setLockedTasks(array);
     }, []);
 
     const categories: Category[] = [
         {
             name: '📒 Лексика',
-            description:"Правильное употребление слов",
+            description: "Правильное употребление слов",
             range: [5, 8],
             color: theme.palette.primary.light
         },
         {
             name: '🖊️ Орфография',
-            description:"Правописание букв в словах",
+            description: "Правописание букв в словах",
             range: [9, 15],
             color: theme.palette.primary.light
         },
         {
             name: '📃 Пунктуация',
-            description:"Знаки препинания в предложениях",
+            description: "Знаки препинания в предложениях",
             range: [16, 21],
             color: theme.palette.primary.light
         },
         {
             name: '📖 Текст',
-            description:"Чтение и анализ содержимого текста",
+            description: "Чтение и анализ содержимого текста",
             range: [22, 26],
             color: theme.palette.primary.light
         }
     ];
 
-    if (isAuthenticated!="1") {
+    if (isAuthenticated !== "1") {
         return <Container maxWidth="md" sx={{ py: 3 }} />;
     }
 
@@ -119,7 +158,7 @@ export default function HomePage() {
                     color: 'text.primary',
                     fontSize: isMobile ? '1.25rem' : '1.7rem'
                 }}>
-                    Добрый вечер, username!
+                    Привет, name!
                 </Typography>
                 <Typography variant="h1" sx={{
                     mb: 6,
@@ -206,6 +245,85 @@ export default function HomePage() {
                 </Box>
             </FadeContainer>
 
+
+            {/* Блок с практикой */}
+            <FadeContainer>
+                <Typography variant="h6" sx={{
+                    mt: 6,
+                    mb: 3,
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    color: 'text.primary',
+                    fontSize: isMobile ? '1.1rem' : '1.5rem'
+                }}>
+                    ИИ-Практика
+                </Typography>
+
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: 2,
+                    justifyContent: 'center',
+                    alignItems: 'stretch'
+                }}>
+                    {[
+                        { id: 'ai-test', title: 'Тест с ИИ-Анализом' },
+                        { id: 'ai-essay', title: 'ИИ-Проверка сочинения' }
+                    ].map((practice) => {
+                        const isLocked = lockedPractice.includes(practice.id);
+                        const isTest = practice.id.includes("ai-test")
+                        return (
+                            <Tooltip
+                                key={practice.id}
+                                title={isLocked ? isTest ? "Только с подпиской" : "В разработке" : ""}
+                                placement="top"
+                            >
+                                <Box sx={{
+                                    position: 'relative',
+                                    flex: 1,
+                                    minWidth: 200
+                                }}>
+                                    {isLocked && (
+                                        <LockIcon
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 8,
+                                                right: 8,
+                                                zIndex: 1,
+                                                color: 'text.disabled'
+                                            }}
+                                        />
+                                    )}
+                                    <Button
+                                        variant="contained"
+                                        disabled={isLocked}
+                                        sx={{
+                                            bgcolor: theme.palette.primary.main,
+                                            borderRadius: 3,
+                                            p: 2,
+                                            fontSize: isMobile ? '0.9rem' : '1.1rem',
+                                            fontWeight: 600,
+                                            textTransform: 'none',
+                                            color: theme.palette.text.primary,
+                                            width: '100%',
+                                            height: 100,
+                                            '&:hover': !isLocked ? {
+                                                bgcolor: theme.palette.primary.dark,
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: 3
+                                            } : {},
+                                            opacity: isLocked ? 0.7 : 1,
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                    >
+                                        {practice.title}
+                                    </Button>
+                                </Box>
+                            </Tooltip>
+                        );
+                    })}
+                </Box>
+            </FadeContainer>
             <FadeContainer>
                 <Alert
                     severity="info"
@@ -235,7 +353,7 @@ export default function HomePage() {
                         </Box>
                     ) : (
                         <Typography variant="body2" component="div" sx={{ color: 'onSurfaceVariant.main' }}>
-                            {fact || "Для лучшего запоминания правил пробуйте объяснять их своими словами"}
+                            {currentFact || "Для лучшего запоминания правил пробуйте объяснять их своими словами"}
                         </Typography>
                     )}
                 </Alert>
@@ -283,28 +401,51 @@ export default function HomePage() {
                                 { length: openCategory.range[1] - openCategory.range[0] + 1 },
                                 (_, i) => {
                                     const taskNumber = openCategory.range[0] + i;
+                                    const isLocked = lockedTasks.includes(taskNumber);
+
                                     return (
-                                        <Button
+                                        <Tooltip
                                             key={taskNumber}
-                                            component={Link}
-                                            href={`/theory?q=${taskNumber}`}
-                                            variant="outlined"
-                                            size="small"
-                                            sx={{
-                                                height: 80,
-                                                borderRadius: 2,
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                transition: 'all 0.2s ease',
-                                                '&:hover': {
-                                                    transform: 'translateY(-2px)',
-                                                    boxShadow: 1
-                                                }
-                                            }}
+                                            title={isLocked ? "Тестируется" : ""}
+                                            placement="top"
                                         >
-                                            <span style={{ fontSize: '1rem' }}>Задание</span>
-                                            <span>№{taskNumber}</span>
-                                        </Button>
+                                            <Box sx={{ position: 'relative' }}>
+                                                {isLocked && (
+                                                    <LockIcon
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            top: 8,
+                                                            right: 8,
+                                                            zIndex: 1,
+                                                            color: 'text.disabled'
+                                                        }}
+                                                    />
+                                                )}
+                                                <Button
+                                                    component={isLocked ? 'button' : Link}
+                                                    href={isLocked ? undefined : `/theory?q=${taskNumber}`}
+                                                    variant="outlined"
+                                                    size="small"
+                                                    disabled={isLocked}
+                                                    sx={{
+                                                        height: 80,
+                                                        borderRadius: 2,
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        transition: 'all 0.2s ease',
+                                                        '&:hover': {
+                                                            transform: isLocked ? 'none' : 'translateY(-2px)',
+                                                            boxShadow: isLocked ? 'none' : 1
+                                                        },
+                                                        opacity: isLocked ? 0.6 : 1,
+                                                        width: '100%'
+                                                    }}
+                                                >
+                                                    <span style={{ fontSize: '1rem' }}>Задание</span>
+                                                    <span>№{taskNumber}</span>
+                                                </Button>
+                                            </Box>
+                                        </Tooltip>
                                     );
                                 }
                             )}

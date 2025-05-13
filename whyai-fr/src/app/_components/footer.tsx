@@ -25,9 +25,11 @@ export function Footer() {
                         mb: 2
                     }}
                 >
+
                     <IconButton
                         aria-label="GitHub"
                         color="inherit"
+                        href="https://github.com/sunderrrrr"
                         sx={{
                             color: 'onSurfaceVariant.main',
                             '&:hover': {
@@ -41,6 +43,7 @@ export function Footer() {
                     <IconButton
                         aria-label="Telegram"
                         color="inherit"
+                        href="https://t.me/bkmz7692"
                         sx={{
                             color: 'onSurfaceVariant.main',
                             '&:hover': {
@@ -70,7 +73,7 @@ export function Footer() {
                         variant="caption"
                         color="text.secondary"
                     >
-                        © {new Date().getFullYear()} WhyAI. Все права защищены. В разработке.
+                        © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_APP_NAME}. Все права защищены. В разработке.
                     </Typography>
 
                     <Box sx={{ display: 'flex', gap: 0 }}>
