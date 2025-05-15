@@ -50,7 +50,7 @@ export default function HomePage() {
     const [loadingFact, setLoadingFact] = useState<boolean>(false);
     const [lockedTasks, setLockedTasks] = useState<number[]>([]);
     const [lockedPractice, setLockedPractice] = useState<string[]>(['ai-test', 'ai-essay']);
-
+    const BaseApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
         const fetchFactsAndSetFact = async () => {
             setLoadingFact(true);
@@ -59,7 +59,7 @@ export default function HomePage() {
                 let savedUsed: number[] = JSON.parse(localStorage.getItem('usedFacts') || '[]');
 
                 if (savedFacts.length === 0 || savedUsed.length >= savedFacts.length) {
-                    const response = await fetch('http://localhost:8090/api/v1/fact');
+                    const response = await fetch(`${BaseApiUrl}/fact`);
 
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
