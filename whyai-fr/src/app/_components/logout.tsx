@@ -14,10 +14,11 @@ export function LogoutButton() {
     };
 
     // @ts-ignore
+    // @ts-ignore
     return (
         <Button
             variant="text"
-            color={theme.palette.primary.main}
+            color='text.primary'
             startIcon={<Logout fontSize="small" />}
             onClick={handleLogout}
             sx={{

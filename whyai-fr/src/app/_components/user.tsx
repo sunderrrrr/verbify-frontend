@@ -17,7 +17,7 @@ export function UserButton() {
     return (
         <Button
             variant="text"
-            color={theme.palette.primary.main}
+            color='text.primary'
             startIcon={<Person2Outlined fontSize="small" />}
             onClick={handleUser}
             sx={{

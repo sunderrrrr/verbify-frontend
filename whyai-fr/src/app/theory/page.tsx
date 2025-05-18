@@ -82,7 +82,7 @@ const MarkdownComponents = {
         <code style={{
             backgroundColor: '#f5f5f5',
             padding: '2px 4px',
-            borderRadius: '4px',
+            borderRadius: '6px',
             fontFamily: 'monospace'
         }}>
             {children}
@@ -331,7 +331,7 @@ export default function ChatPage() {
                             <ArrowBack />
                         </IconButton>
                         <Typography variant="h6" component="h1" ml={2}>
-                            {taskNumber ? `Задание ${taskNumber}` : 'Чат с помощником'}
+                            {taskNumber ? `#️⃣ Задание ${taskNumber}` : 'Чат с помощником'}
                         </Typography>
                         <Button
                             variant="outlined"
@@ -362,7 +362,7 @@ export default function ChatPage() {
                         key={msg.id}
                         sx={{
                             alignSelf: msg.isBot ? 'flex-start' : 'flex-end',
-                            bgcolor: msg.isBot ? 'background.paper' : 'primary.main',
+                            bgcolor: msg.isBot ? 'background.paper' : 'primary.light',
                             color: msg.isBot ? 'text.primary' : 'primary.contrastText',
                             ml: msg.isBot ? 0 : 'auto'
                         }}

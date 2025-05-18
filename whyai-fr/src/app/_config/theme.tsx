@@ -3,9 +3,9 @@ import { createTheme } from '@mui/material/styles';
 const baseTheme = createTheme({
     palette: {
         primary: {
-            main: 'rgba(232,155,63,0.71)', // Насыщенный зелёный (как листья растений)
+            main: 'rgba(229,169,103,0.97)', // Насыщенный зелёный (как листья растений)
             light: '#ffdcbe', // Светло-зелёный фон
-            dark: 'rgba(204,136,55,0.71)', // Тёмно-зелёный акцент
+            dark: 'rgba(210,149,82,0.71)', // Тёмно-зелёный акцент
         },
         secondary: {
             main: '#FFB300', // Тёплый жёлтый для акцентов
@@ -74,7 +74,7 @@ const baseTheme = createTheme({
         MuiDialog: {
             styleOverrides: {
                 paper: {
-                    borderRadius: 6,
+                    borderRadius: 10,
                     boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
                 }
             }
@@ -82,7 +82,7 @@ const baseTheme = createTheme({
 
     },
     shape: {
-        borderRadius: 7,
+        borderRadius: 10,
     },
     typography:{
         fontFamily: 'Inter, Arial, sans-serif',
