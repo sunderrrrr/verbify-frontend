@@ -49,7 +49,7 @@ export default function HomePage() {
     const [currentFact, setCurrentFact] = useState<string>('');
     const [loadingFact, setLoadingFact] = useState<boolean>(false);
     const [lockedTasks, setLockedTasks] = useState<number[]>([]);
-    const [lockedPractice, setLockedPractice] = useState<string[]>(['ai-test', 'ai-essay']);
+    const [lockedPractice, setLockedPractice] = useState<string[]>(['ai-test']);
     const BaseApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
         const fetchFactsAndSetFact = async () => {
@@ -297,9 +297,10 @@ export default function HomePage() {
                                     <Button
                                         variant="contained"
                                         disabled={isLocked}
+                                        href={"/essay"}
                                         sx={{
-                                            bgcolor: theme.palette.primary.main,
-                                            borderRadius: 3,
+                                            bgcolor: theme.palette.primary.light,
+                                            borderRadius: 2,
                                             p: 2,
                                             fontSize: isMobile ? '0.9rem' : '1.1rem',
                                             fontWeight: 600,
@@ -308,14 +309,16 @@ export default function HomePage() {
                                             width: '100%',
                                             height: 100,
                                             '&:hover': !isLocked ? {
-                                                bgcolor: theme.palette.primary.dark,
+                                                bgcolor: theme.palette.primary.light,
                                                 transform: 'translateY(-2px)',
                                                 boxShadow: 3
                                             } : {},
                                             opacity: isLocked ? 0.7 : 1,
                                             transition: 'all 0.3s ease'
+
                                         }}
                                     >
+                                        ⭐
                                         {practice.title}
                                     </Button>
                                 </Box>
