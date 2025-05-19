@@ -23,11 +23,15 @@ import {
     keyframes,
     useMediaQuery,
     Chip,
-    CardContent,
     Stack,
-    Card
+    Card,
+    CardContent,
+    Grow,
+    Fade,
+    Slide,
+    Tooltip
 } from '@mui/material';
-import { Send, ArrowBack,Star, Info, Article, TextSnippet } from '@mui/icons-material';
+import { Star, Info } from '@mui/icons-material';
 import theme from "@/app/_config/theme";
 
 const API_BASE_URL = 'http://localhost:8090/api/v1/essay';
@@ -49,8 +53,19 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.5; }
+`;
+
 const FadeContainer = styled(Box)(({ theme }) => ({
-    animation: `${fadeIn} 0.5s ease-out both`,
+    animation: `${fadeIn} 0.8s ease-out both`,
 }));
 
 const MarkdownContainer = styled(Box)(({ theme }) => ({
@@ -59,20 +74,26 @@ const MarkdownContainer = styled(Box)(({ theme }) => ({
     padding: theme.spacing(3),
     marginTop: theme.spacing(3),
     boxShadow: theme.shadows[1],
+    animation: `${slideUp} 0.6s ease-out`,
     '& pre': {
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.background.default,
         padding: theme.spacing(2),
         borderRadius: '12px',
-        overflowX: 'auto'
+        overflowX: 'auto',
+        animation: `${fadeIn} 0.6s ease-in`
     }
 }));
 
+const LoadingPulse = styled(CircularProgress)({
+    animation: `${pulse} 1.5s ease-in-out infinite`
+});
+
 const MarkdownComponents = {
-    p: ({ children }: any) => <Typography variant="body1" paragraph>{children}</Typography>,
-    a: ({ children, href }: any) => <Link href={href} target="_blank" rel="noopener" color="primary">{children}</Link>,
-    ul: ({ children }: any) => <ul style={{ paddingLeft: '24px', margin: '12px 0' }}>{children}</ul>,
-    ol: ({ children }: any) => <ol style={{ paddingLeft: '24px', margin: '12px 0' }}>{children}</ol>,
-    li: ({ children }: any) => <li style={{ marginBottom: '8px', lineHeight: 1.6 }}>{children}</li>,
+    p: ({ children }: any) => <Typography variant="body1" paragraph sx={{ animation: `${fadeIn} 0.3s` }}>{children}</Typography>,
+    a: ({ children, href }: any) => <Link href={href} target="_blank" rel="noopener" color="primary" sx={{ animation: `${fadeIn} 0.3s` }}>{children}</Link>,
+    ul: ({ children }: any) => <ul style={{ paddingLeft: '24px', margin: '12px 0', animation: `${fadeIn} 0.3s` }}>{children}</ul>,
+    ol: ({ children }: any) => <ol style={{ paddingLeft: '24px', margin: '12px 0', animation: `${fadeIn} 0.3s` }}>{children}</ol>,
+    li: ({ children }: any) => <li style={{ marginBottom: '8px', lineHeight: 1.6, animation: `${fadeIn} 0.3s` }}>{children}</li>,
     strong: ({ children }: any) => <strong style={{ color: theme.palette.primary.main }}>{children}</strong>
 };
 
@@ -80,8 +101,9 @@ export default function EssayPage() {
     const router = useRouter();
     const resultRef = useRef<HTMLDivElement>(null);
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [lastScore, setLastScore] = useState<number | null>(null);
+
     const [themes, setThemes] = useState<EssayTheme[]>([]);
+    const [lastScore, setLastScore] = useState<number | null>(null);
     const [customTheme, setCustomTheme] = useState(false);
     const [selectedThemeId, setSelectedThemeId] = useState<string>('');
     const [essayContent, setEssayContent] = useState('');
@@ -95,41 +117,50 @@ export default function EssayPage() {
     const selectedTheme = themes.find(theme => theme.id.toString() === selectedThemeId);
 
     const getToken = () => {
-        return document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1] || '';
+        const token = document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1];
+        if (!token) router.push('/login');
+        return token || '';
     };
 
     useEffect(() => {
-        if (!getToken()) router.push('/login');
-    }, [router]);
-
-    useEffect(() => {
-        const fetchThemes = async () => {
+        const fetchData = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/themes/`);
-                if (!response.ok) throw new Error('Ошибка загрузки тем');
-                const data = await response.json();
-                setThemes(data);
+                const [themesRes, lastRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/themes`, {
+                        headers: { 'Authorization': `Bearer ${getToken()}` }
+                    }),
+                    fetch(`${API_BASE_URL}/last`, {
+                        headers: { 'Authorization': `Bearer ${getToken()}` }
+                    })
+                ]);
+
+                if (!themesRes.ok) throw new Error('Ошибка загрузки тем');
+                const { result: themesData } = await themesRes.json();
+                setThemes(themesData);
+
+                if (lastRes.ok) {
+                    const { score } = await lastRes.json();
+                    setLastScore(score);
+                }
             } catch (err) {
                 handleError(err as Error);
             }
         };
-        fetchThemes();
+        fetchData();
     }, []);
-
-    useEffect(() => {
-        if (selectedTheme) {
-            setSourceText(selectedTheme.text);
-        }
-    }, [selectedThemeId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const payload = {
-                theme: customTheme ? customThemeText : selectedTheme?.theme || '',
-                text: customTheme ? sourceText : selectedTheme?.text || '',
+            const payload = customTheme ? {
+                theme: customThemeText,
+                text: sourceText,
+                essay: essayContent
+            } : {
+                theme_id: selectedThemeId,
+                text: selectedTheme?.text || '',
                 essay: essayContent
             };
 
@@ -146,6 +177,7 @@ export default function EssayPage() {
 
             const data = await response.json();
             setEvaluation(data);
+            setLastScore(data.score);
             resultRef.current?.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
             handleError(err as Error);
@@ -162,187 +194,215 @@ export default function EssayPage() {
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
-
             <FadeContainer>
                 <Box textAlign="center" mb={6}>
-                    <Chip
-                        icon={<Info />}
-                        label="ИИ-Проверка сочинений"
-                        color="primary"
-                        sx={{ mb: 2, fontSize: isMobile ? '0.875rem' : '1rem' }}
-                    />
-                    <Typography variant="h1" sx={{
+
+                        <Chip
+                            icon={<Info />}
+                            label="ИИ-Проверка сочинений"
+                            color="primary"
+                            sx={{ mb: 2 }}
+                        />
+
+                    <Typography variant="h4" sx={{
                         fontWeight: 700,
-                        color: 'text.primary',
-                        fontSize: isMobile ? '1.5rem' : '2rem',
-                        lineHeight: 1.2
+                        animation: `${fadeIn} 1s ease-out`
                     }}>
                         Проверка сочинений с искусственным интеллектом
                     </Typography>
-                    <Typography variant="body1" sx={{
-                        mt: 2,
-                        color: 'text.secondary',
-                        fontSize: isMobile ? '0.875rem' : '1rem'
+                    <Typography variant="h6" sx={{
+                        fontWeight: 300,
+                        animation: `${fadeIn} 1.5s ease-out`
                     }}>
-                        Получи моментальную оценку и рекомендации по улучшению
+                        Учитывай, что оценка ИИ иногда может быть необъективна
                     </Typography>
                 </Box>
             </FadeContainer>
-            {(
-                <Box sx={{
-                    mb: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    p: 3,
-                    bgcolor: 'surfaceVariant.main',
-                    borderRadius: '16px',
-                    border: `1px solid ${theme.palette.text.primary}`
+
+            <Grow in={lastScore !== null} timeout={500}>
+                <Card sx={{
+                    mb: 4,
+                    bgcolor: 'background.paper',
+                    borderRadius: 3,
+                    transformOrigin: 'top center'
                 }}>
-                    <Star color="primary" sx={{ fontSize: 32 }} />
-                    <Box>
-                        <Typography variant="body2" color="text.secondary">
-                            Последняя проверка
-                        </Typography>
-                        <Typography variant="h4" color="primary">
-                            {lastScore}19/22
-                        </Typography>
-                    </Box>
-                </Box>
-            )}
-            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={customTheme}
-                            onChange={(e) => setCustomTheme(e.target.checked)}
-                            color="secondary"
-                        />
-                    }
-                    label="Хочу писать по своему тексту"
-                    sx={{ alignSelf: 'flex-start' }}
-                />
+                    <CardContent>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                            <Star color="primary" />
+                            <Typography variant="h6">
+                                Последняя оценка: {lastScore}/10
+                            </Typography>
+                        </Stack>
+                    </CardContent>
+                </Card>
+            </Grow>
+
+            <Box component="form" onSubmit={handleSubmit} sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+                '& > *': {
+                    animation: `${slideUp} 0.6s ease-out`
+                }
+            }}>
+                <Fade in timeout={600}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={customTheme}
+                                onChange={(e) => setCustomTheme(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label="Использовать собственную тему"
+                        sx={{ alignSelf: 'flex-start' }}
+                    />
+                </Fade>
 
                 {!customTheme ? (
-                    <FormControl fullWidth variant="filled">
-                        <InputLabel>Выбери тему сочинения</InputLabel>
-                        <Select
-                            value={selectedThemeId}
-                            label="Выберите тему сочинения"
-                            onChange={(e) => setSelectedThemeId(e.target.value)}
-                            required
-                            MenuProps={{ sx: { maxHeight: 300 } }}
-                            //IconComponent={Article}
-                        >
-                            {themes.map((theme) => (
-                                <MenuItem
-                                    key={theme.id}
-                                    value={theme.id.toString()}
-                                    sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
-                                >
-                                    <Typography variant="subtitle1">{theme.theme}</Typography>
-                                    <Typography
-                                        variant="body2"
+                    <Grow in timeout={700}>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel>Выберите тему сочинения</InputLabel>
+                            <Select
+                                value={selectedThemeId}
+                                label="Выберите тему сочинения"
+                                onChange={(e) => setSelectedThemeId(e.target.value)}
+                                required
+                                MenuProps={{
+                                    PaperProps: {
+                                        sx: {
+                                            maxHeight: 400,
+                                            '& .MuiMenuItem-root': {
+                                                whiteSpace: 'normal',
+                                                lineHeight: 1.5,
+                                                py: 2,
+                                                transition: 'all 0.2s'
+                                            }
+                                        }
+                                    }
+                                }}
+                            >
+                                {themes.map((theme) => (
+                                    <MenuItem
+                                        key={theme.id}
+                                        value={theme.id.toString()}
                                         sx={{
-                                            color: 'text.secondary',
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            maxWidth: '100%'
+                                            '&:hover': {
+                                                transform: 'translateX(5px)'
+                                            }
                                         }}
                                     >
-                                        {theme.text}
-                                    </Typography>
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
+                                        <Box sx={{ width: '100%' }}>
+                                            <Typography variant="subtitle1" gutterBottom>
+                                                {theme.theme}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{ whiteSpace: 'pre-wrap' }}
+                                            >
+                                                {theme.text.slice(0, 50)}...
+                                            </Typography>
+                                        </Box>
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grow>
                 ) : (
-                    <>
-                        <TextField
-                            label="Ваша тема"
-                            value={customThemeText}
-                            onChange={(e) => setCustomThemeText(e.target.value)}
-                            fullWidth
-                            required
-                            variant="filled"
-                            InputProps={{
-                                //startAdornment: <Article color="action" sx={{ mr: 1 }} />
-                            }}
-                        />
-                        <TextField
-                            label="Исходный текст"
-                            value={sourceText}
-                            onChange={(e) => setSourceText(e.target.value)}
-                            multiline
-                            rows={4}
-                            fullWidth
-                            required
-                            variant="filled"
-                            helperText="Текст, на основе которого пишется сочинение"
-                            InputProps={{
-                               // startAdornment: <TextSnippet color="action" sx={{ mr: 1 }} />
-                            }}
-                        />
-                    </>
+                    <Grow in timeout={700}>
+                        <>
+                            <TextField
+                                label="Ваша тема"
+                                value={customThemeText}
+                                onChange={(e) => setCustomThemeText(e.target.value)}
+                                fullWidth
+                                required
+                                variant="outlined"
+                            />
+                            <TextField
+                                label="Исходный текст"
+                                value={sourceText}
+                                onChange={(e) => setSourceText(e.target.value)}
+                                multiline
+                                rows={4}
+                                fullWidth
+                                required
+                                variant="outlined"
+                            />
+                        </>
+                    </Grow>
                 )}
 
                 {selectedTheme && !customTheme && (
-                    <Box sx={{
-                        p: 2,
-                        borderRadius: '12px',
-                        bgcolor: 'surfaceVariant.main',
-                        border: `1px solid ${theme.palette.text.primary}`
-                    }}>
-                        <Typography variant="body2" color="text.secondary">
-                            Выбранный текст для сочинения:
-                        </Typography>
-                        <Typography variant="body1" sx={{ mt: 1 }}>
-                            {selectedTheme.text}
-                        </Typography>
-                    </Box>
+                    <Grow in timeout={800}>
+                        <Box sx={{
+                            p: 3,
+                            bgcolor: 'background.default',
+                            borderRadius: 2,
+                            border: `1px solid ${theme.palette.divider}`,
+                            transition: 'all 0.3s'
+                        }}>
+                            <Typography variant="h6" gutterBottom>
+                                Полный текст выбранной темы:
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}
+                            >
+                                {selectedTheme.text}
+                            </Typography>
+                        </Box>
+                    </Grow>
                 )}
 
-                <TextField
-                    label="Текст сочинения"
-                    value={essayContent}
-                    onChange={(e) => setEssayContent(e.target.value)}
-                    multiline
-                    minRows={8}
-                    maxRows={12}
-                    fullWidth
-                    required
-                    variant="filled"
-                    helperText="Минимальный объем - 250 слов"
-                    InputProps={{
-                       // startAdornment: <TextSnippet color="action" sx={{ mr: 1 }} />
-                    }}
-                    sx={{ '& textarea': { lineHeight: 1.6 } }}
-                />
+                <Grow in timeout={1000}>
+                    <TextField
+                        label="Текст вашего сочинения"
+                        value={essayContent}
+                        onChange={(e) => setEssayContent(e.target.value)}
+                        multiline
+                        minRows={8}
+                        fullWidth
+                        required
+                        variant="outlined"
+                        helperText="Минимальный объем - 250 слов"
+                        sx={{
+                            '& textarea': {
+                                lineHeight: 1,
+                                transition: 'all 2s'
+                            }
+                        }}
+                    />
+                </Grow>
 
-                <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    disabled={loading || essayContent.length < 250}
-                    sx={{
-                        width: '100%',
-                        py: 2,
-                        borderRadius: '16px',
-                        fontWeight: 700,
-                        textTransform: 'none',
-                        fontSize: '1.1rem',
-                        '&:hover': {
-                            boxShadow: theme.shadows[3]
-                        }
-                    }}
-                >
-                    {loading ? (
-                        <CircularProgress size={24} color="inherit" />
-                    ) : (
-                        '🔍 Проверить сочинение'
-                    )}
-                </Button>
+                <Grow in timeout={1000}>
+                    
+                    <Button
+
+                        aria-disabled={true}
+                        type="submit"
+                        variant="contained"
+
+                        size="large"
+                        disabled={loading || essayContent.length < 250}
+                        sx={{
+                            width: '100%',
+                            py: 2,
+                            borderRadius: 2,
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                                transform: 'scale(1.02)'
+                            }
+                        }}
+                    >
+                        {loading ? (
+                            <LoadingPulse size={24} color="inherit" />
+                        ) : 'Отправить на проверку'}
+                    </Button>
+                </Grow>
             </Box>
 
             {evaluation && (
@@ -351,11 +411,11 @@ export default function EssayPage() {
                         <Chip
                             label={`Оценка: ${evaluation.score}/10`}
                             color="primary"
-                            sx={{ fontWeight: 700 }}
+                            sx={{
+                                fontWeight: 700,
+                                animation: `${pulse} 1s ease`
+                            }}
                         />
-                        <Typography variant="body2" color="text.secondary">
-                            Время проверки: {new Date().toLocaleTimeString()}
-                        </Typography>
                     </Box>
 
                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
@@ -365,10 +425,11 @@ export default function EssayPage() {
                     <Box sx={{
                         mt: 4,
                         pt: 3,
-                        borderTop: `1px solid black`
+                        borderTop: `1px solid ${theme.palette.divider}`,
+                        animation: `${fadeIn} 0.5s ease-out`
                     }}>
                         <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
-                            Рекомендации для улучшения:
+                            Рекомендации:
                         </Typography>
                         <ReactMarkdown components={MarkdownComponents}>
                             {evaluation.recommendations}
@@ -382,13 +443,14 @@ export default function EssayPage() {
                 autoHideDuration={6000}
                 onClose={() => setSnackbarOpen(false)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                TransitionComponent={Slide}
             >
                 <Alert
                     severity="error"
                     sx={{
                         width: '100%',
-                        borderRadius: '12px',
-                        boxShadow: theme.shadows[3]
+                        borderRadius: 2,
+                        animation: `${slideUp} 0.3s ease-out`
                     }}
                 >
                     {error}
