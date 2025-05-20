@@ -28,8 +28,7 @@ import {
     CardContent,
     Grow,
     Fade,
-    Slide,
-    Tooltip
+    Slide
 } from '@mui/material';
 import { Star, Info } from '@mui/icons-material';
 import theme from "@/app/_config/theme";
@@ -45,7 +44,7 @@ interface EssayTheme {
 interface EssayEvaluation {
     score: number;
     feedback: string;
-    recommendations: string;
+    recommendation: string;
 }
 
 const fadeIn = keyframes`
@@ -139,8 +138,8 @@ export default function EssayPage() {
                 setThemes(themesData);
 
                 if (lastRes.ok) {
-                    const { score } = await lastRes.json();
-                    setLastScore(score);
+                    const { result: lastData } = await lastRes.json();
+                    setLastScore(lastData?.score || null);
                 }
             } catch (err) {
                 handleError(err as Error);
@@ -175,9 +174,9 @@ export default function EssayPage() {
 
             if (!response.ok) throw new Error('Ошибка оценки сочинения');
 
-            const data = await response.json();
-            setEvaluation(data);
-            setLastScore(data.score);
+            const { result } = await response.json();
+            setEvaluation(result);
+            setLastScore(result.score);
             resultRef.current?.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
             handleError(err as Error);
@@ -196,14 +195,12 @@ export default function EssayPage() {
         <Container maxWidth="md" sx={{ py: 4 }}>
             <FadeContainer>
                 <Box textAlign="center" mb={6}>
-
-                        <Chip
-                            icon={<Info />}
-                            label="ИИ-Проверка сочинений"
-                            color="primary"
-                            sx={{ mb: 2 }}
-                        />
-
+                    <Chip
+                        icon={<Info />}
+                        label="ИИ-Проверка сочинений"
+                        color="primary"
+                        sx={{ mb: 2 }}
+                    />
                     <Typography variant="h4" sx={{
                         fontWeight: 700,
                         animation: `${fadeIn} 1s ease-out`
@@ -230,7 +227,7 @@ export default function EssayPage() {
                         <Stack direction="row" alignItems="center" spacing={2}>
                             <Star color="primary" />
                             <Typography variant="h6">
-                                Последняя оценка: {lastScore}/10
+                                Последняя оценка: {lastScore}/22
                             </Typography>
                         </Stack>
                     </CardContent>
@@ -356,7 +353,7 @@ export default function EssayPage() {
                     </Grow>
                 )}
 
-                <Grow in timeout={1000}>
+                <Grow in timeout={900}>
                     <TextField
                         label="Текст вашего сочинения"
                         value={essayContent}
@@ -369,23 +366,19 @@ export default function EssayPage() {
                         helperText="Минимальный объем - 250 слов"
                         sx={{
                             '& textarea': {
-                                lineHeight: 1,
-                                transition: 'all 2s'
+                                lineHeight: 1.6,
+                                transition: 'all 0.3s'
                             }
                         }}
                     />
                 </Grow>
 
                 <Grow in timeout={1000}>
-                    
                     <Button
-
-                        aria-disabled={true}
                         type="submit"
                         variant="contained"
-
                         size="large"
-                        disabled={loading || essayContent.length < 250}
+                        disabled={loading || essayContent.length < 5}
                         sx={{
                             width: '100%',
                             py: 2,
@@ -409,7 +402,7 @@ export default function EssayPage() {
                 <MarkdownContainer ref={resultRef}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                         <Chip
-                            label={`Оценка: ${evaluation.score}/10`}
+                            label={`Оценка: ${evaluation.score}/22`}
                             color="primary"
                             sx={{
                                 fontWeight: 700,
@@ -432,7 +425,7 @@ export default function EssayPage() {
                             Рекомендации:
                         </Typography>
                         <ReactMarkdown components={MarkdownComponents}>
-                            {evaluation.recommendations}
+                            {evaluation.recommendation}
                         </ReactMarkdown>
                     </Box>
                 </MarkdownContainer>
