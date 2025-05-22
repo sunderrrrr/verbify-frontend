@@ -32,8 +32,10 @@ import {
 } from '@mui/material';
 import { Star, Info } from '@mui/icons-material';
 import theme from "@/app/_config/theme";
+import {YandexAd} from "@/app/_components/yandexAd";
 
 const API_BASE_URL = 'http://localhost:8090/api/v1/essay';
+const LOCAL_STORAGE_KEY = 'lastEssayResult';
 
 interface EssayTheme {
     id: number;
@@ -102,7 +104,7 @@ export default function EssayPage() {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [themes, setThemes] = useState<EssayTheme[]>([]);
-    const [lastScore, setLastScore] = useState<number | null>(null);
+    const [lastResult, setLastResult] = useState<EssayEvaluation | null>(null);
     const [customTheme, setCustomTheme] = useState(false);
     const [selectedThemeId, setSelectedThemeId] = useState<string>('');
     const [essayContent, setEssayContent] = useState('');
@@ -124,22 +126,19 @@ export default function EssayPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [themesRes, lastRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/themes`, {
-                        headers: { 'Authorization': `Bearer ${getToken()}` }
-                    }),
-                    fetch(`${API_BASE_URL}/last`, {
-                        headers: { 'Authorization': `Bearer ${getToken()}` }
-                    })
-                ]);
+                // Загрузка тем
+                const themesRes = await fetch(`${API_BASE_URL}/themes`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
 
                 if (!themesRes.ok) throw new Error('Ошибка загрузки тем');
                 const { result: themesData } = await themesRes.json();
                 setThemes(themesData);
 
-                if (lastRes.ok) {
-                    const { result: lastData } = await lastRes.json();
-                    setLastScore(lastData?.score || null);
+                // Загрузка последнего результата из localStorage
+                const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (savedData) {
+                    setLastResult(JSON.parse(savedData));
                 }
             } catch (err) {
                 handleError(err as Error);
@@ -158,7 +157,7 @@ export default function EssayPage() {
                 text: sourceText,
                 essay: essayContent
             } : {
-                theme_id: selectedThemeId,
+                theme: selectedTheme?.theme,
                 text: selectedTheme?.text || '',
                 essay: essayContent
             };
@@ -176,7 +175,11 @@ export default function EssayPage() {
 
             const { result } = await response.json();
             setEvaluation(result);
-            setLastScore(result.score);
+
+            // Сохраняем результат в localStorage
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(result));
+            setLastResult(result);
+
             resultRef.current?.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
             handleError(err as Error);
@@ -207,16 +210,10 @@ export default function EssayPage() {
                     }}>
                         Проверка сочинений с искусственным интеллектом
                     </Typography>
-                    <Typography variant="h6" sx={{
-                        fontWeight: 300,
-                        animation: `${fadeIn} 1.5s ease-out`
-                    }}>
-                        Учитывай, что оценка ИИ иногда может быть необъективна
-                    </Typography>
                 </Box>
             </FadeContainer>
 
-            <Grow in={lastScore !== null} timeout={500}>
+            <Grow in={!!lastResult} timeout={500}>
                 <Card sx={{
                     mb: 4,
                     bgcolor: 'background.paper',
@@ -227,7 +224,7 @@ export default function EssayPage() {
                         <Stack direction="row" alignItems="center" spacing={2}>
                             <Star color="primary" />
                             <Typography variant="h6">
-                                Последняя оценка: {lastScore}/22
+                                Последняя оценка: {lastResult?.score}/22
                             </Typography>
                         </Stack>
                     </CardContent>
@@ -308,7 +305,7 @@ export default function EssayPage() {
                     </Grow>
                 ) : (
                     <Grow in timeout={700}>
-                        <>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                             <TextField
                                 label="Ваша тема"
                                 value={customThemeText}
@@ -327,7 +324,7 @@ export default function EssayPage() {
                                 required
                                 variant="outlined"
                             />
-                        </>
+                        </Box>
                     </Grow>
                 )}
 
@@ -378,7 +375,7 @@ export default function EssayPage() {
                         type="submit"
                         variant="contained"
                         size="large"
-                        disabled={loading || essayContent.length < 5}
+                        disabled={loading || essayContent.length < 250}
                         sx={{
                             width: '100%',
                             py: 2,
@@ -427,10 +424,19 @@ export default function EssayPage() {
                         <ReactMarkdown components={MarkdownComponents}>
                             {evaluation.recommendation}
                         </ReactMarkdown>
+                        <Typography variant="caption" gutterBottom sx={{ fontWeight: 400 }}>
+                            Напоминание: Результаты выданные нейросетью не являются окончательными и могут быть ошибочными
+                        </Typography>
                     </Box>
                 </MarkdownContainer>
             )}
-
+            <YandexAd
+                blockId="R-A-123456-1"
+                params={{
+                    statId: 123456,
+                    async: true
+                }}
+            />
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}
