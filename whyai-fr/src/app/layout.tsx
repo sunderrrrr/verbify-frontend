@@ -7,6 +7,7 @@ import config from './_config/app'
 import { useEffect } from 'react';
 import { useAuthStore } from './_stores/authStore';
 import {Footer} from "@/app/_components/footer";
+import CookieWarning from './_components/cookieWarn';
 const inter = Inter({ subsets: ['latin'] });
 
 
@@ -30,6 +31,7 @@ export default function RootLayout({children,}: {
               }}>
         <Providers>
             {children}
+            <CookieWarning />
         </Providers>
         <Footer/>
         </body>

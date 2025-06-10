@@ -199,7 +199,7 @@ export default function HomePage() {
                                 transition: 'all 0.2s ease',
                                 '&:hover': {
                                     transform: 'translateY(-2px)',
-                                    boxShadow: 2
+                                    boxShadow: 1
                                 }
                             }}
                         >
@@ -311,7 +311,7 @@ export default function HomePage() {
                                             '&:hover': !isLocked ? {
                                                 bgcolor: theme.palette.primary.light,
                                                 transform: 'translateY(-2px)',
-                                                boxShadow: 3
+
                                             } : {},
                                             opacity: isLocked ? 0.7 : 1,
                                             transition: 'all 0.3s ease'
@@ -419,7 +419,7 @@ export default function HomePage() {
                                                             position: 'absolute',
                                                             top: 8,
                                                             right: 8,
-                                                            zIndex: 1,
+                                                            zIndex: 0,
                                                             color: 'text.disabled'
                                                         }}
                                                     />
@@ -438,7 +438,7 @@ export default function HomePage() {
                                                         transition: 'all 0.2s ease',
                                                         '&:hover': {
                                                             transform: isLocked ? 'none' : 'translateY(-2px)',
-                                                            boxShadow: isLocked ? 'none' : 1
+                                                            boxShadow: isLocked ? 'none' : 'none'
                                                         },
                                                         opacity: isLocked ? 0.6 : 1,
                                                         width: '100%'

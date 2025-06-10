@@ -10,7 +10,7 @@ export function UserButton() {
 
 
     const handleUser = () => {
-        router.push('/login');
+        router.push('/soon');
     };
 
     // @ts-ignore
