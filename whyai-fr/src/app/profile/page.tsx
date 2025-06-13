@@ -1,291 +1,280 @@
-// app/profile/page.tsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Button,
     Container,
-    Grid,
     Typography,
+    useMediaQuery,
+    keyframes,
+    styled,
+    TextField,
+    Tabs,
+    Tab,
     Card,
     CardContent,
-    TextField,
-    useTheme,
-    Slide,
-    Grow,
-    Fade,
-    styled,
-    useMediaQuery,
-    Divider
+    CircularProgress,
+    FormControlLabel,
+    Radio,
+    RadioGroup
 } from '@mui/material';
-import { Lock, ShowChart, Settings } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
-const AnimatedCard = styled(Card)(({ theme }) => ({
-    transition: theme.transitions.create(['transform', 'box-shadow'], {
-        duration: theme.transitions.duration.short,
-    }),
-    '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: theme.shadows[4]
-    }
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const FadeContainer = styled(Box)(({ theme }) => ({
+    animation: `${fadeIn} 0.5s ease-out both`
 }));
-
-const MainWrapper = styled(Box)(({ theme }) => ({
-    backgroundColor: theme.palette.background.paper,
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[1],
-    display: 'flex',
-    minHeight: '600px',
-    overflow: 'hidden',
-    position: 'relative',
-    flexDirection: 'column',
-    [theme.breakpoints.up('md')]: {
-        flexDirection: 'row'
-    }
-}));
-
-const NavigationPanel = styled(Box)(({ theme }) => ({
-    width: '100%',
-    padding: theme.spacing(2),
-    backgroundColor: theme.palette.background.paper,
-    display: 'flex',
-    flexDirection: 'column',
-    borderBottom: `2px solid ${theme.palette.divider}`,
-    [theme.breakpoints.up('md')]: {
-        width: '30%',
-        borderBottom: 'none',
-        borderRight: `2px solid ${theme.palette.divider}`
-    }
-}));
-
-const ContentPanel = styled(Box)(({ theme }) => ({
-    flex: 1,
-    padding: theme.spacing(4),
-    backgroundColor: theme.palette.background.paper,
-    position: 'relative'
-}));
-
-const StaticDivider = styled(Divider)(({ theme }) => ({
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    height: '100%',
-    width: '2px',
-    backgroundColor: theme.palette.divider,
-    display: 'none',
-    [theme.breakpoints.up('md')]: {
-        display: 'block'
-    }
-}));
-
-const mockStats = {
-    totalQuestions: 127,
-    completedEssays: 23,
-    dailyLimit: 15
-};
-
-const subscriptions = [
-    {
-        tier: 'Базовая',
-        questions: '15 вопросов/день',
-        essays: '3 проверки/день',
-        color: 'grey.500',
-        price: 'Бесплатно',
-        active: true
-    },
-    {
-        tier: 'Про',
-        questions: '30 вопросов/день',
-        essays: '5 проверок/день',
-        color: 'primary.main',
-        price: '299 ₽/мес',
-        active: false
-    },
-    {
-        tier: 'Премиум',
-        questions: '60 вопросов/день',
-        essays: '10 проверок/день',
-        color: 'secondary.main',
-        price: '599 ₽/мес',
-        active: false
-    }
-];
 
 export default function ProfilePage() {
-    const [activeSection, setActiveSection] = useState('stats');
-    const [userData, setUserData] = useState({
-        name: 'Иван Иванов',
-        email: 'user@example.com',
-        password: ''
-    });
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [tab, setTab] = useState(0);
+    const [loadingStats, setLoadingStats] = useState(true);
+    const [stats, setStats] = useState({
+        registeredAt: '2024-04-12',
+        totalQuestions: 87,
+        essaysChecked: 12,
+        currentPlan: 'Базовая'
+    });
 
-    const SectionButton = ({ icon, text, section }: { icon: React.ReactNode; text: string; section: string }) => (
-        <Fade in={true} timeout={800}>
-            <Button
-                fullWidth
-                variant={activeSection === section ? 'contained' : 'text'}
-                startIcon={icon}
-                onClick={() => setActiveSection(section)}
-                sx={{
-                    justifyContent: 'flex-start',
-                    mb: 2,
-                    borderRadius: 2,
-                    py: 2,
-                    minHeight: 56,
-                    '& .MuiButton-startIcon': {
-                        marginRight: theme.spacing(1.5),
-                        marginLeft: { xs: 0, md: theme.spacing(0.5) }
-                    }
-                }}
-            >
-                {!isMobile && text}
-            </Button>
-        </Fade>
-    );
+    const [plans, setPlans] = useState([
+        {
+            name: 'Базовая',
+            description: '15 вопросов в день, 3 проверки сочинения, реклама',
+            price: 0,
+            active: true
+        },
+        {
+            name: 'Премиум',
+            description: '25 вопросов в день, 6 проверок, без рекламы',
+            price: 400,
+            active: false
+        },
+        {
+            name: 'Ультра',
+            description: 'Бесконечные вопросы, 10 проверок, тест-система',
+            price: 1000,
+            active: false
+        }
+    ]);
+
+    useEffect(() => {
+        // Имитация запроса на сервер
+        setTimeout(() => {
+            setLoadingStats(false);
+        }, 1000);
+    }, []);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <MainWrapper>
-                <NavigationPanel>
-                    <SectionButton icon={<ShowChart />} text="Статистика" section="stats" />
-                    <SectionButton icon={<Lock />} text="Подписка" section="subscription" />
-                    <SectionButton icon={<Settings />} text="Настройки" section="settings" />
-                </NavigationPanel>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+            <FadeContainer>
+                <Typography variant="h5" fontWeight={700} textAlign="center" mb={3}>
+                    Профиль и настройки
+                </Typography>
 
-                <StaticDivider orientation="vertical" />
+                <Tabs
+                    value={tab}
+                    onChange={(_, newValue) => setTab(newValue)}
+                    centered
+                    variant="scrollable"
+                    allowScrollButtonsMobile
+                    sx={{ mb: 3 }}
+                >
+                    <Tab label="Настройки" />
+                    <Tab label="Статистика" />
+                    <Tab label="Подписка" />
+                </Tabs>
+            </FadeContainer>
 
-                <ContentPanel>
-                    <Slide direction={isMobile ? 'up' : 'left'} in={true} mountOnEnter unmountOnExit>
-                        <Box>
-                            {/* Статистика */}
-                            {activeSection === 'stats' && (
-                                <Grid container spacing={3}>
-                                    {[
-                                        ['Всего вопросов', mockStats.totalQuestions],
-                                        ['Проверок сочинений', mockStats.completedEssays],
-                                        ['Лимит вопросов', mockStats.dailyLimit]
-                                    ].map(([title, value], index) => (
-                                        <Grow in={true} key={title} timeout={index * 200}>
-                                            <Grid item xs={12} md={4} component="div">
-                                                <AnimatedCard>
-                                                    <CardContent>
-                                                        <Typography color="text.secondary">{title}</Typography>
-                                                        <Typography variant="h4" sx={{ mt: 1 }}>
-                                                            {value}
-                                                        </Typography>
-                                                    </CardContent>
-                                                </AnimatedCard>
-                                            </Grid>
-                                        </Grow>
-                                    ))}
-                                </Grid>
-                            )}
-
-                            {/* Подписки */}
-                            {activeSection === 'subscription' && (
-                                <Grid container spacing={3}>
-                                    {subscriptions.map((sub, index) => (
-                                        <Grow in={true} key={sub.tier} timeout={index * 200}>
-                                            <Grid item xs={12} md={4} component="div">
-                                                <AnimatedCard sx={{
-                                                    border: `2px solid ${theme.palette.primary.light}`,
-                                                    position: 'relative',
-                                                    '&:after': sub.active ? {
-                                                        content: '"✓"',
-                                                        position: 'absolute',
-                                                        top: -12,
-                                                        right: -12,
-                                                        bgcolor: 'success.main',
-                                                        color: 'white',
-                                                        width: 32,
-                                                        height: 32,
-                                                        borderRadius: '50%',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: 18
-                                                    } : {}
-                                                }}>
-                                                    <CardContent>
-                                                        <Typography variant="h6" gutterBottom sx={{ color: sub.color }}>
-                                                            {sub.tier}
-                                                        </Typography>
-                                                        <Typography>✓ {sub.questions}</Typography>
-                                                        <Typography>✓ {sub.essays}</Typography>
-                                                        <Box sx={{ mt: 2 }}>
-                                                            <Typography variant="h6">{sub.price}</Typography>
-                                                            {!sub.active && (
-                                                                <Button
-                                                                    fullWidth
-                                                                    variant="contained"
-                                                                    sx={{ mt: 2 }}
-                                                                    color={sub.tier === 'Про' ? 'primary' : 'secondary'}
-                                                                >
-                                                                    Оформить
-                                                                </Button>
-                                                            )}
-                                                            {sub.active && (
-                                                                <Button
-                                                                    fullWidth
-                                                                    variant="outlined"
-                                                                    sx={{ mt: 2 }}
-                                                                    disabled
-                                                                >
-                                                                    Активный план
-                                                                </Button>
-                                                            )}
-                                                        </Box>
-                                                    </CardContent>
-                                                </AnimatedCard>
-                                            </Grid>
-                                        </Grow>
-                                    ))}
-                                </Grid>
-                            )}
-
-                            {/* Настройки */}
-                            {activeSection === 'settings' && (
-                                <Grow in={true}>
-                                    <Box component="form">
-                                        <Grid container spacing={3}>
-                                            {[
-                                                { label: 'Имя', value: userData.name, key: 'name' },
-                                                { label: 'Email', value: userData.email, key: 'email', type: 'email' },
-                                                { label: 'Новый пароль', value: userData.password, key: 'password', type: 'password' }
-                                            ].map((field, index) => (
-                                                <Grid item={true} xs={12} key={field.key} component="div">
-                                                    <Fade in={true} timeout={index * 200}>
-                                                        <TextField
-                                                            fullWidth
-                                                            label={field.label}
-                                                            type={field.type || 'text'}
-                                                            value={field.value}
-                                                            onChange={(e) => setUserData({ ...userData, [field.key]: e.target.value })}
-                                                        />
-                                                    </Fade>
-                                                </Grid>
-                                            ))}
-                                            <Grid item={true} xs={12} component="div">
-                                                <Fade in={true} timeout={500}>
-                                                    <Button
-                                                        variant="contained"
-                                                        size="large"
-                                                        sx={{ mt: 2 }}
-                                                    >
-                                                        Сохранить изменения
-                                                    </Button>
-                                                </Fade>
-                                            </Grid>
-                                        </Grid>
-                                    </Box>
-                                </Grow>
-                            )}
+            {tab === 0 && (
+                <FadeContainer>
+                    <Box
+                        display="grid"
+                        gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }}
+                        gap={4}
+                        width="100%"
+                    >
+                        {/* Смена пароля */}
+                        <Box
+                            sx={{
+                                bgcolor: 'background.paper',
+                                p: 3,
+                                borderRadius: 2,
+                                boxShadow: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                width: '100%',
+                            }}
+                        >
+                            <Typography variant="h6" fontWeight={600} mb={2}>
+                                Сменить пароль
+                            </Typography>
+                            <Box display="flex" gap={2} flexDirection={{ xs: 'column', sm: 'row' }}>
+                                <TextField fullWidth label="Введите вашу почту" />
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ minWidth: { xs: '100%', sm: '160px' } }}
+                                >
+                                    Сбросить
+                                </Button>
+                            </Box>
                         </Box>
-                    </Slide>
-                </ContentPanel>
-            </MainWrapper>
+
+                        {/* Интерфейс */}
+                        <Box
+                            sx={{
+                                bgcolor: 'background.paper',
+                                p: 3,
+                                borderRadius: 2,
+                                boxShadow: 1,
+                                width: '100%',
+                            }}
+                        >
+                            <Typography variant="h6" fontWeight={600} mb={2}>
+                                Интерфейс
+                            </Typography>
+                            <Typography variant="subtitle2" mb={1}>
+                                Тема
+                            </Typography>
+                            <RadioGroup defaultValue="light" row>
+                                <FormControlLabel value="light" control={<Radio />} label="Светлая" />
+                                <FormControlLabel value="dark" control={<Radio />} label="Тёмная" />
+                            </RadioGroup>
+                        </Box>
+
+                        {/* Управление уведомлениями */}
+                        <Box
+                            sx={{
+                                bgcolor: 'background.paper',
+                                p: 3,
+                                borderRadius: 2,
+                                boxShadow: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                width: '100%',
+                            }}
+                        >
+                            <Typography variant="h6" fontWeight={600} mb={2}>
+                                Уведомления
+                            </Typography>
+                            <Button variant="outlined" fullWidth>
+                                Управление уведомлениями
+                            </Button>
+                        </Box>
+
+                        {/* Дополнительно */}
+                        <Box
+                            sx={{
+                                bgcolor: 'background.paper',
+                                p: 3,
+                                borderRadius: 2,
+                                boxShadow: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                width: '100%',
+                            }}
+                        >
+                            <Typography variant="h6" fontWeight={600} mb={2}>
+                                Дополнительно
+                            </Typography>
+                            <Button variant="outlined" color="error" fullWidth>
+                                Удалить аккаунт
+                            </Button>
+                        </Box>
+                    </Box>
+                </FadeContainer>
+            )}
+
+
+            {tab === 1 && (
+                <FadeContainer>
+                    <Typography variant="h6" fontWeight={600} mb={2}>
+                        Статистика аккаунта
+                    </Typography>
+                    {loadingStats ? (
+                        <Box display="flex" justifyContent="center" mt={4}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={2}>
+                            <Card>
+                                <CardContent>
+                                    <Typography fontWeight={600}>Дата регистрации</Typography>
+                                    <Typography color="text.secondary">{stats.registeredAt}</Typography>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <Typography fontWeight={600}>Всего заданий</Typography>
+                                    <Typography color="text.secondary">{stats.totalQuestions}</Typography>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <Typography fontWeight={600}>Проверенных сочинений</Typography>
+                                    <Typography color="text.secondary">{stats.essaysChecked}</Typography>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent>
+                                    <Typography fontWeight={600}>Текущий план</Typography>
+                                    <Typography color="text.secondary">{stats.currentPlan}</Typography>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                    )}
+                </FadeContainer>
+            )}
+
+            {tab === 2 && (
+                <FadeContainer>
+                    <Typography variant="h6" fontWeight={600} mb={2}>
+                        Тарифные планы
+                    </Typography>
+                    <Box display="flex" flexDirection="column" gap={2}>
+                        {plans.map((plan) => (
+                            <Card
+                                key={plan.name}
+                                sx={{
+                                    backgroundColor: plan.active
+                                        ? theme.palette.primary.light
+                                        : theme.palette.background.paper,
+                                    border: plan.active ? `2px solid ${theme.palette.primary.main}` : '1px solid #ccc'
+                                }}
+                            >
+                                <CardContent>
+                                    <Typography variant="h6" fontWeight={600}>
+                                        {plan.name}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" mb={2}>
+                                        {plan.description}
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                        {plan.price === 0 ? 'Бесплатно' : `${plan.price} ₽/мес`}
+                                    </Typography>
+                                    {!plan.active && (
+                                        <Button
+                                            variant="contained"
+                                            sx={{ mt: 2 }}
+                                            onClick={() => alert(`Оформление: ${plan.name}`)}
+                                        >
+                                            Оформить
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </Box>
+                </FadeContainer>
+            )}
         </Container>
     );
 }

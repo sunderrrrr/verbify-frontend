@@ -158,7 +158,7 @@ export default function HomePage() {
                     color: 'text.primary',
                     fontSize: isMobile ? '1.25rem' : '1.7rem'
                 }}>
-                    Привет, name!
+                    ИИ-Репетитор
                 </Typography>
                 <Typography variant="h1" sx={{
                     mb: 6,
