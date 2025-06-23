@@ -1,39 +1,39 @@
-'use client';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-//import './globals.css';
 import Providers from './providers';
-import config from './_config/app'
-import { useEffect } from 'react';
-import { useAuthStore } from './_stores/authStore';
-import {Footer} from "@/app/_components/footer";
+import { Footer } from '@/app/_components/footer';
 import CookieWarning from './_components/cookieWarn';
+import AuthInit from './_components/authInit';
+
 const inter = Inter({ subsets: ['latin'] });
 
+export const metadata: Metadata = {
+    title: 'Verbify',
+    icons: {
+        icon: '/favicon.ico',
+    },
+};
 
-
-export default function RootLayout({children,}: {
-    children: React.ReactNode
-}) {
-    const initialize = useAuthStore((state) => state.initialize);
-
-    useEffect(() => {
-        initialize();
-    }, [initialize]);
+export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
-        <body className={inter.className}
-              style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minHeight: '100vh',
-                  margin: 0
-              }}>
+        <html lang="ru">
+        <head />
+        <body
+            className={inter.className}
+            suppressHydrationWarning
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: '100vh',
+                margin: 0,
+            }}
+        >
         <Providers>
+            <AuthInit />
             {children}
             <CookieWarning />
         </Providers>
-        <Footer/>
+        <Footer />
         </body>
         </html>
     );

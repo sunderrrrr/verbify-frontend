@@ -1,15 +1,17 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, TextField,Divider, Typography, Container, Box, Stack, Link } from '@mui/material';
+import { Button, TextField, Divider, Typography, Container, Box, Stack, Link, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import NextLink from 'next/link';
 import apiClient from '../../_config/api';
-import { Google, GitHub } from '@mui/icons-material';
+import { Google } from '@mui/icons-material';
 import config from '../../_config/app';
 import Image from "next/image";
 import theme from "@/app/_config/theme";
+import { useState } from 'react';
+
 const schema = z.object({
     email: z.string().email('Некорректный email').min(1, 'Обязательное поле'),
     password: z.string()
@@ -27,12 +29,21 @@ export default function RegisterPage() {
         resolver: zodResolver(schema),
     });
 
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
     const onSubmit = async (data: any) => {
+        setErrorMessage(null);
         try {
             await apiClient.post(config.api.endpoints.register, data);
             window.location.href = '/login';
-        } catch (error) {
+        } catch (error: any) {
             console.error('Ошибка регистрации:', error);
+            // Попытка достать сообщение ошибки от сервера, или дефолтное
+            if (error?.response?.data?.result === "user exists") {
+                setErrorMessage('Ошибка регистрации: Возможно пользователь с таким email уже существует🤔\n Поменяйте данные или подождите');
+            } else {
+                setErrorMessage('Ошибка регистрации: Возможно пользователь с таким email уже существует🤔\n Поменяйте данные или подождите');
+            }
         }
     };
 
@@ -68,9 +79,9 @@ export default function RegisterPage() {
                     gutterBottom
                     sx={{
                         display: 'flex',
-                        alignItems: 'center', // Вертикальное выравнивание по центру
-                        justifyContent: 'center', // Горизонтальное выравнивание по центру
-                        gap: 1, // Отступ между элементами
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
                         fontWeight: 700,
                         background: theme.palette.primary.main,
                         WebkitBackgroundClip: 'text',
@@ -88,7 +99,6 @@ export default function RegisterPage() {
                         style={{
                             objectFit: 'contain',
                             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-                            // Убираем наследование текстовых стилей
                             margin: 0,
                             padding: 0
                         }}
@@ -96,10 +106,15 @@ export default function RegisterPage() {
                 </Typography>
 
                 <Stack component="form" spacing={3} onSubmit={handleSubmit(onSubmit)}>
+                    {!!errorMessage && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {errorMessage}
+                        </Alert>
+                    )}
+
                     <TextField
                         label="Email"
                         variant="filled"
-
                         InputProps={{ disableUnderline: true }}
                         {...register('email')}
                         error={!!errors.email}
@@ -114,7 +129,6 @@ export default function RegisterPage() {
 
                     <TextField
                         label="Пароль"
-
                         type="password"
                         variant="filled"
                         InputProps={{ disableUnderline: true }}
@@ -135,6 +149,8 @@ export default function RegisterPage() {
                         variant="filled"
                         InputProps={{ disableUnderline: true }}
                         {...register('name')}
+                        error={!!errors.name}
+                        helperText={errors.name?.message?.toString()}
                         sx={{
                             '& .MuiFilledInput-root': {
                                 borderRadius: 2,
@@ -194,8 +210,6 @@ export default function RegisterPage() {
                         >
                             Google
                         </Button>
-
-
                     </Stack>
 
                     <Typography variant="body2" textAlign="center" sx={{ mt: 2 }}>

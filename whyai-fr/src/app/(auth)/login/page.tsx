@@ -1,18 +1,19 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, TextField,Link, Typography, Container, Box, Stack, Divider } from '@mui/material';
+import { Button, TextField, Link, Typography, Container, Box, Stack, Divider, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import apiClient from '../../_config/api';
 import { useAuthStore } from '../../_stores/authStore';
 import { motion } from 'framer-motion';
-import { Google, GitHub } from '@mui/icons-material';
+import { Google } from '@mui/icons-material';
 import NextLink from 'next/link';
 import theme from '../../_config/theme';
 import config from '../../_config/app';
 import Image from "next/image";
-import {router} from "next/client";
 import { useRouter } from 'next/navigation';
+import React from "react";
+
 const schema = z.object({
     email: z.string().email('Неправильная почта').min(1, 'Required'),
     password: z.string().min(8, 'Минимум 8 символов'),
@@ -27,16 +28,26 @@ export default function LoginPage() {
         resolver: zodResolver(schema),
     });
 
+    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
     const onSubmit = async (data: any) => {
+        setErrorMessage(null); // Сброс ошибки перед новым запросом
         try {
             const response = await apiClient.post(config.api.endpoints.login, data);
-            console.log(response.data.token);
+
+            // Проверяем ответ API
+            if (response.data.result === 'sign in failed') {
+                setErrorMessage('Пароль неверный или пользователя не существует🤔');
+                return;
+            }
+
+            // Если успех
             localStorage.setItem("token", response.data.token);
             setAuth(response.data.token);
-            console.log("start push")
             router.push('/');
         } catch (error) {
             console.error('Ошибка логина:', error);
+            setErrorMessage('Пароль неверный или пользователя не существует🤔');
         }
     };
 
@@ -59,9 +70,9 @@ export default function LoginPage() {
                     gutterBottom
                     sx={{
                         display: 'flex',
-                        alignItems: 'center', // Вертикальное выравнивание по центру
-                        justifyContent: 'center', // Горизонтальное выравнивание по центру
-                        gap: 1, // Отступ между элементами
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
                         fontWeight: 700,
                         background: theme.palette.primary.main,
                         WebkitBackgroundClip: 'text',
@@ -79,7 +90,6 @@ export default function LoginPage() {
                         style={{
                             objectFit: 'contain',
                             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-                            // Убираем наследование текстовых стилей
                             margin: 0,
                             padding: 0
                         }}
@@ -112,12 +122,19 @@ export default function LoginPage() {
                         helperText={errors.password?.message?.toString()}
                         sx={{
                             '& .MuiFilledInput-root': {
-                                marginBottom:3,
+                                marginBottom: 3,
                                 borderRadius: 3,
                                 bgcolor: 'background.default'
                             }
                         }}
                     />
+
+                    {/* Ошибка входа */}
+                    {errorMessage && (
+                        <Alert severity="error" sx={{ mt: -2, mb: 2 }}>
+                            {errorMessage}
+                        </Alert>
+                    )}
 
                     <MotionButton
                         fullWidth
@@ -155,8 +172,6 @@ export default function LoginPage() {
                         >
                             Google
                         </Button>
-
-
                     </Stack>
 
                     <Typography variant="body2" textAlign="center" sx={{ mt: 2 }}>

@@ -1,17 +1,12 @@
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /app
 
-# Копируем ВСЕ файлы фронтенда
 COPY . .
 
-# Устанавливаем зависимости и собираем проект
-RUN npm ci
-RUN npm run build
+RUN npm install
 
-# Настраиваем окружение
-ENV NODE_ENV production
+# Без telemetry и watermark
+ENV NEXT_TELEMETRY_DISABLED=1
 
-EXPOSE 3000
-
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
