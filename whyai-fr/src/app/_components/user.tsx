@@ -17,10 +17,10 @@ export function UserButton() {
     return (
         <Button
             variant="text"
-            color='text.primary'
             startIcon={<Person2Outlined fontSize="small" />}
             onClick={handleUser}
             sx={{
+                color: 'text.primary',
                 textTransform: 'none',
                 '&:hover': {
                     backgroundColor: 'errorContainer.main',

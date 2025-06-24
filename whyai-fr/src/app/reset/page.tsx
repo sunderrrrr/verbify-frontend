@@ -28,7 +28,7 @@ const FadePaper = styled(Paper)(({ theme }) => ({
     maxWidth: 480,
     margin: 'auto',
     boxShadow: theme.shadows[8],
-    backgroundColor: theme.palette.surface ? theme.palette.surface.main : theme.palette.background.paper,
+    backgroundColor: theme.palette.background.paper,
 }));
 
 export default function ResetPasswordPage() {
@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                bgcolor: theme.palette.surfaceVariant?.main || theme.palette.background.default,
+                bgcolor: theme.palette.background.paper || theme.palette.background.default,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
                     fontWeight={700}
                     textAlign="center"
                     gutterBottom
-                    sx={{ color: theme.palette.onSurface?.main || theme.palette.text.primary , pb: 2}}
+                    sx={{ color: theme.palette.text.primary , pb: 2}}
                 >
                     Сброс пароля
                 </Typography>

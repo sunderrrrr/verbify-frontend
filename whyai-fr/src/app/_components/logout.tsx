@@ -18,10 +18,11 @@ export function LogoutButton() {
     return (
         <Button
             variant="text"
-            color='text.primary'
+
             startIcon={<Logout fontSize="small" />}
             onClick={handleLogout}
             sx={{
+                color:'text.primary',
                 textTransform: 'none',
                 '&:hover': {
                     backgroundColor: 'errorContainer.main',
