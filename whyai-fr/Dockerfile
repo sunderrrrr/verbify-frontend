@@ -6,7 +6,14 @@ COPY . .
 
 RUN npm install
 
-# Без telemetry и watermark
+# Отключаем telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
-CMD ["npm", "run", "dev"]
+# Собираем проект (build)
+RUN npm run build
+
+# Пробрасываем порт 3000
+EXPOSE 3000
+
+# Запускаем продакшн-сервер
+CMD ["npm", "run", "start"]
