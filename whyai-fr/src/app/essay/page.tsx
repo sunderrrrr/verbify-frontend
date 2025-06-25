@@ -34,7 +34,7 @@ import { Star, Info } from '@mui/icons-material';
 import theme from "@/app/_config/theme";
 import {YandexAd} from "@/app/_components/yandexAd";
 
-const API_BASE_URL = 'http://localhost:8090/api/v1/essay';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/essay`;
 const LOCAL_STORAGE_KEY = 'lastEssayResult';
 
 interface EssayTheme {
