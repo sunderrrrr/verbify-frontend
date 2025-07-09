@@ -186,7 +186,7 @@ export default function LoginPage() {
                                 '&:hover': { textDecoration: 'underline' }
                             }}
                         >
-                            Зарегестрируйся
+                            Зарегистрируйся
                         </Link>
                     </Typography>
                 </Stack>

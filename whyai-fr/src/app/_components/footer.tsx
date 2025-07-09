@@ -80,7 +80,7 @@ export function Footer() {
                         <Typography
                             variant="caption"
                             component="a"
-                            href="/soon"
+                            href="/privacy"
                             sx={{
                                 color: 'text.secondary',
                                 textDecoration: 'none',
@@ -96,7 +96,7 @@ export function Footer() {
                         <Typography
                             variant="caption"
                             component="a"
-                            href="/soon"
+                            href="/terms"
                             sx={{
                                 color: 'text.secondary',
                                 textDecoration: 'none',

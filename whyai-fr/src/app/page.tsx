@@ -23,6 +23,8 @@ import { useTheme } from '@mui/material/styles';
 import TipsAndUpdates from '@mui/icons-material/TipsAndUpdates';
 import Cookies from "js-cookie";
 import LockIcon from '@mui/icons-material/Lock';
+import Script from "next/script";
+import TGBanner from "@/app/_components/telegram";
 
 interface Category {
     name: string;
@@ -169,8 +171,9 @@ export default function HomePage() {
                 }}>
                     Выбери раздел для изучения
                 </Typography>
-            </FadeContainer>
 
+            </FadeContainer>
+            <TGBanner/>
             <FadeContainer>
                 <Box
                     sx={{
@@ -360,8 +363,23 @@ export default function HomePage() {
                         </Typography>
                     )}
                 </Alert>
-            </FadeContainer>
+                <Box sx={{ mt: 5 }}>
+                    <div id="yandex_rtb_R-A-16171095-1" />
+                            <Script id="yandex-rtb-block" strategy="afterInteractive">
+                                {`
+                    window.yaContextCb.push(() => {
+                        Ya.Context.AdvManager.render({
+                            "blockId": "R-A-16171095-1",
+                            "renderTo": "yandex_rtb_R-A-16171095-1"
+                        });
+                    });
+                `}
+                    </Script>
+                </Box>
 
+
+            </FadeContainer>
+            <FadeContainer></FadeContainer>
             <Dialog
                 open={!!openCategory}
                 onClose={() => setOpenCategory(null)}

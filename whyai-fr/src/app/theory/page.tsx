@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import ChatPage from './ChatPage'; // это уже клиентский компонент с `use client` сверху
+import ChatPage from './ChatPage';
 
 export default function Page() {
     return (
