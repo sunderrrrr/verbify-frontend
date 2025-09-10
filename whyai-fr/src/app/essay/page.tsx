@@ -198,12 +198,7 @@ export default function EssayPage() {
         <Container maxWidth="md" sx={{ py: 4 }}>
             <FadeContainer>
                 <Box textAlign="center" mb={6}>
-                    <Chip
-                        icon={<Info />}
-                        label="ИИ-Проверка сочинений"
-                        color="primary"
-                        sx={{ mb: 2 }}
-                    />
+                 
                     <Typography variant="h4" sx={{
                         fontWeight: 700,
                         animation: `${fadeIn} 1s ease-out`

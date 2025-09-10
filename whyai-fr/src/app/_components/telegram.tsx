@@ -67,7 +67,7 @@ export default function TGBanner() {
                     variant="contained"
                     color="primary"
                     component={Link}
-                    href="https://t.me/your_channel"
+                    href="https://t.me/verbiffy"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={handleClose}
