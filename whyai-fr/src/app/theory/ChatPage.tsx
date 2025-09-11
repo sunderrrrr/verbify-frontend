@@ -16,10 +16,16 @@ import {
     Alert,
     Snackbar,
     keyframes,
-    styled
+    styled,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
-import { Send, ArrowBack, Delete } from '@mui/icons-material';
+import { Send, ArrowBack, Delete, Close as CloseIcon } from '@mui/icons-material';
 import Script from 'next/script';
+import Image from 'next/image';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -104,6 +110,7 @@ export default function ChatPage() {
     const [error, setError] = useState<string | null>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [theoryContent, setTheoryContent] = useState('');
+    const [rateLimitDialogOpen, setRateLimitDialogOpen] = useState(false);
 
     const getToken = () => {
         if (typeof window === 'undefined') return '';
@@ -275,6 +282,13 @@ export default function ChatPage() {
                 })
             });
 
+            if (response.status === 429) {
+                setRateLimitDialogOpen(true);
+                setLoading(false);
+                setIsBotTyping(false);
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -306,6 +320,10 @@ export default function ChatPage() {
 
     const handleCloseSnackbar = () => {
         setSnackbarOpen(false);
+    };
+
+    const handleCloseRateLimitDialog = () => {
+        setRateLimitDialogOpen(false);
     };
 
     if (loadingData) {
@@ -484,6 +502,55 @@ export default function ChatPage() {
                     {error}
                 </Alert>
             </Snackbar>
+
+            {/* Диалог при ошибке 429 */}
+            <Dialog
+                open={rateLimitDialogOpen}
+                onClose={handleCloseRateLimitDialog}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle id="alert-dialog-title" sx={{ pb: 1 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <span>Ой, похоже вы исчерпали дневной лимит вопросов🥺</span>
+                        <IconButton onClick={handleCloseRateLimitDialog}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 1 }}>
+                    <Box display="flex" alignItems="center">
+                        <Box sx={{ mr: 3, flexShrink: 0 }}>
+                            <Image
+                                src="/whyai-logo.png"
+                                alt=""
+                                width={80}
+                                height={80}
+                                style={{ borderRadius: '50%' }}
+                            />
+                        </Box>
+                        <DialogContentText id="alert-dialog-description">
+                            Мы огранимичваем запросы к сервису для экономии ресурсов, однако вы можете оформить подписку, тем самым, поддержав проект!
+                        </DialogContentText>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        component={Link}
+                        href="https://t.me/verbiffy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={handleCloseRateLimitDialog}
+                        sx={{ px: 4 }}
+                    >
+                        Подробнее👀
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

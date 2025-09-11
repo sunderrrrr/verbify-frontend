@@ -7,7 +7,7 @@ import {
     Dialog,
     Typography,
     IconButton,
-    CircularProgress,
+
     useMediaQuery,
     AlertTitle,
     Alert,
@@ -15,10 +15,9 @@ import {
     styled,
     Tooltip
 } from '@mui/material';
-import { ArrowForward, Close, Lightbulb } from '@mui/icons-material';
+import { ArrowForward, Close } from '@mui/icons-material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from './_stores/authStore';
 import { useTheme } from '@mui/material/styles';
 import TipsAndUpdates from '@mui/icons-material/TipsAndUpdates';
 import Cookies from "js-cookie";
@@ -45,15 +44,39 @@ const FadeContainer = styled(Box)(({ theme }) => ({
 export default function HomePage() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [openCategory, setOpenCategory] = useState<Category | null>(null);
-    const isAuthenticated = Cookies.get("isAuthenticated");
     const router = useRouter();
+
+    // Хуки вызываем всегда
+    const [mounted, setMounted] = useState(false);
+    const [openCategory, setOpenCategory] = useState<Category | null>(null);
     const [currentFact, setCurrentFact] = useState<string>('');
     const [loadingFact, setLoadingFact] = useState<boolean>(false);
     const [lockedTasks, setLockedTasks] = useState<number[]>([]);
-    const [lockedPractice, setLockedPractice] = useState<string[]>(['ai-test']);
+    const [lockedPractice] = useState<string[]>(['ai-test']);
     const BaseApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+    // Состояние mounted нужно для безопасного доступа к window/Cookies
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const isAuthenticated = mounted ? Cookies.get("isAuthenticated") : null;
+
+    // Редирект только после mounted
+    useEffect(() => {
+        if (mounted && isAuthenticated !== "1") {
+            router.push('/login');
+        }
+    }, [mounted, isAuthenticated, router]);
+
+    useEffect(() => {
+        const array = Array.from({ length: 18 }, (_, i) => i + 9);
+        setLockedTasks(array);
+    }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+
         const fetchFactsAndSetFact = async () => {
             setLoadingFact(true);
             try {
@@ -62,33 +85,20 @@ export default function HomePage() {
 
                 if (savedFacts.length === 0 || savedUsed.length >= savedFacts.length) {
                     const response = await fetch(`${BaseApiUrl}/fact`);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
-                    if (!data.facts || !Array.isArray(data.facts)) {
-                        throw new Error('Invalid data format');
-                    }
-
-                    savedFacts = data.facts.map((f: { fact: string }) => f.fact);
+                    savedFacts = data.facts?.map((f: { fact: string }) => f.fact) || [];
                     savedUsed = [];
                     localStorage.setItem('factsList', JSON.stringify(savedFacts));
                     localStorage.setItem('usedFacts', JSON.stringify(savedUsed));
                 }
 
-                const availableIndices = savedFacts
-                    .map((_, index) => index)
-                    .filter(index => !savedUsed.includes(index));
-
+                const availableIndices = savedFacts.map((_, i) => i).filter(i => !savedUsed.includes(i));
                 const randomIndex = availableIndices.length > 0
                     ? availableIndices[Math.floor(Math.random() * availableIndices.length)]
                     : 0;
-
                 const updatedUsed = [...savedUsed, randomIndex];
                 localStorage.setItem('usedFacts', JSON.stringify(updatedUsed));
-
                 setCurrentFact(savedFacts[randomIndex] || "Нет доступных лайфхаков");
 
             } catch (error) {
@@ -100,203 +110,65 @@ export default function HomePage() {
         };
 
         fetchFactsAndSetFact();
-    }, []);
-
-    useEffect(() => {
-        if (isAuthenticated !== "1") {
-            router.push('/login');
-        }
-    }, [isAuthenticated, router]);
-
-    useEffect(() => {
-        const array = Array.from({ length: 18 }, (_, i) => i + 9);
-        setLockedTasks(array);
-    }, []);
+    }, [mounted, BaseApiUrl]);
 
     const categories: Category[] = [
-        {
-            name: '📒 Лексика',
-            description: "Правильное употребление слов",
-            range: [5, 8],
-            color: theme.palette.primary.light
-        },
-        {
-            name: '🖊️ Орфография',
-            description: "Правописание букв в словах",
-            range: [9, 15],
-            color: theme.palette.primary.light
-        },
-        {
-            name: '📃 Пунктуация',
-            description: "Знаки препинания в предложениях",
-            range: [16, 21],
-            color: theme.palette.primary.light
-        },
-        {
-            name: '📖 Текст',
-            description: "Чтение и анализ содержимого текста",
-            range: [22, 26],
-            color: theme.palette.primary.light
-        }
+        { name: '📒 Лексика', description: "Правильное употребление слов", range: [5, 8], color: theme.palette.primary.light },
+        { name: '🖊️ Орфография', description: "Правописание букв в словах", range: [9, 15], color: theme.palette.primary.light },
+        { name: '📃 Пунктуация', description: "Знаки препинания в предложениях", range: [16, 21], color: theme.palette.primary.light },
+        { name: '📖 Текст', description: "Чтение и анализ содержимого текста", range: [22, 26], color: theme.palette.primary.light },
     ];
 
-    if (isAuthenticated !== "1") {
-        return <Container maxWidth="md" sx={{ py: 3 }} />;
-    }
+    // Пока mounted не true, можно рендерить спиннер
+
 
     return (
-        <Container
-            maxWidth="md"
-            sx={{
-                py: 3,
-                px: { xs: 1.5, sm: 1 },
-            }}
-        >
+        <Container maxWidth="md" sx={{ py: 3, px: { xs: 1.5, sm: 1 } }}>
             <FadeContainer>
-                <Typography variant="h5" sx={{
-                    mb: 2,
-                    fontWeight: 700,
-                    textAlign: 'center',
-                    color: 'text.primary',
-                    fontSize: isMobile ? '1.25rem' : '1.7rem'
-                }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 700, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1.25rem' : '1.7rem' }}>
                     ИИ-Репетитор
                 </Typography>
-                <Typography variant="h1" sx={{
-                    mb: 6,
-                    fontWeight: 700,
-                    textAlign: 'center',
-                    color: 'text.primary',
-                    fontSize: isMobile ? '1rem' : '1.25rem'
-                }}>
+                <Typography variant="h1" sx={{ mb: 6, fontWeight: 700, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1rem' : '1.25rem' }}>
                     Выбери раздел для изучения
                 </Typography>
-
             </FadeContainer>
-            <TGBanner/>
+
+            <TGBanner />
+
             <FadeContainer>
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
-                        gap: 3,
-                        '& > *': {
-                            maxHeight: isMobile ? 130 : 140,
-                            width: '100%'
-                        }
-                    }}
-                >
-                    {categories.map((category) => (
-                        <Button
-                            key={category.name}
-                            onClick={() => setOpenCategory(category)}
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                borderRadius: 3,
-                                background: category.color,
-                                p: 1.5,
-                                aspectRatio: '3/2',
-                                transition: 'all 0.2s ease',
-                                '&:hover': {
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: 1
-                                }
-                            }}
-                        >
-                            <Typography
-                                variant="body1"
-                                sx={{
-                                    fontWeight: 600,
-                                    mb: 0.5,
-                                    textAlign: 'center',
-                                    color: 'text.primary',
-                                    fontSize: isMobile ? '0.875rem' : '1.5rem'
-                                }}
-                            >
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3, '& > *': { maxHeight: isMobile ? 130 : 140, width: '100%' } }}>
+                    {categories.map(category => (
+                        <Button key={category.name} onClick={() => setOpenCategory(category)} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', borderRadius: 3, background: category.color, p: 1.5, aspectRatio: '3/2', transition: 'all 0.2s ease', '&:hover': { transform: 'translateY(-2px)', boxShadow: 1 } }}>
+                            <Typography sx={{ fontWeight: 600, mb: 0.5, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '0.875rem' : '1.5rem' }}>
                                 {category.name}
                             </Typography>
-                            <Typography
-                                variant="body1"
-                                sx={{
-                                    fontWeight: 600,
-                                    mb: 0.5,
-                                    textAlign: 'center',
-                                    color: 'text.primary',
-                                    fontSize: isMobile ? '0.875rem' : '1rem'
-                                }}
-                            >
+                            <Typography sx={{ fontWeight: 600, mb: 0.5, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '0.875rem' : '1rem' }}>
                                 {category.description}
                             </Typography>
-                            <Typography
-                                variant="caption"
-                                sx={{
-                                    color: 'text.secondary',
-                                    fontSize: '0.75rem'
-                                }}
-                            >
+                            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
                                 Задания {category.range[0]}-{category.range[1]}
                             </Typography>
-                            <ArrowForward sx={{
-                                fontSize: isMobile ? 20 : 24,
-                                mt: 0.5
-                            }} />
+                            <ArrowForward sx={{ fontSize: isMobile ? 20 : 24, mt: 0.5 }} />
                         </Button>
                     ))}
                 </Box>
             </FadeContainer>
 
-
-            {/* Блок с практикой */}
+            {/* Практика */}
             <FadeContainer>
-                <Typography variant="h6" sx={{
-                    mt: 6,
-                    mb: 3,
-                    fontWeight: 700,
-                    textAlign: 'center',
-                    color: 'text.primary',
-                    fontSize: isMobile ? '1.1rem' : '1.5rem'
-                }}>
+                <Typography variant="h6" sx={{ mt: 6, mb: 3, fontWeight: 700, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1.1rem' : '1.5rem' }}>
                     ИИ-Практика
                 </Typography>
-
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    gap: 2,
-                    justifyContent: 'center',
-                    alignItems: 'stretch'
-                }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center', alignItems: 'stretch' }}>
                     {[
                         { id: 'ai-test', title: 'Тест с ИИ-Анализом' },
                         { id: 'ai-essay', title: 'ИИ-Проверка сочинения' }
-                    ].map((practice) => {
+                    ].map(practice => {
                         const isLocked = lockedPractice.includes(practice.id);
-                        const isTest = practice.id.includes("ai-test")
                         return (
-                            <Tooltip
-                                key={practice.id}
-                                title={isLocked ? isTest ? "Только с подпиской" : "В разработке" : ""}
-                                placement="top"
-                            >
-                                <Box sx={{
-                                    position: 'relative',
-                                    flex: 1,
-                                    minWidth: 200
-                                }}>
-                                    {isLocked && (
-                                        <LockIcon
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 8,
-                                                right: 8,
-                                                zIndex: 1,
-                                                color: 'text.disabled'
-                                            }}
-                                        />
-                                    )}
+                            <Tooltip key={practice.id} title={isLocked ? "Только с подпиской" : ""} placement="top">
+                                <Box sx={{ position: 'relative', flex: 1, minWidth: 200 }}>
+                                    {isLocked && <LockIcon sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1, color: 'text.disabled' }} />}
                                     <Button
                                         variant="contained"
                                         disabled={isLocked}
@@ -311,18 +183,12 @@ export default function HomePage() {
                                             color: theme.palette.text.primary,
                                             width: '100%',
                                             height: 100,
-                                            '&:hover': !isLocked ? {
-                                                bgcolor: theme.palette.primary.light,
-                                                transform: 'translateY(-2px)',
-
-                                            } : {},
+                                            '&:hover': !isLocked ? { transform: 'translateY(-2px)' } : {},
                                             opacity: isLocked ? 0.7 : 1,
                                             transition: 'all 0.3s ease'
-
                                         }}
                                     >
-                                        ⭐
-                                        {practice.title}
+                                        ⭐ {practice.title}
                                     </Button>
                                 </Box>
                             </Tooltip>
@@ -330,146 +196,41 @@ export default function HomePage() {
                     })}
                 </Box>
             </FadeContainer>
-            <FadeContainer>
-                <Alert
-                    severity="info"
-                    icon={<TipsAndUpdates fontSize="small" />}
-                    sx={{
-                        borderRadius: 2,
-                        marginTop: 5,
-                        bgcolor: 'surfaceContainerLow.main',
-                        color: 'onSurfaceVariant.main',
-                        border: 'none',
-                        '& .MuiAlert-icon': {
-                            color: 'primary.main',
-                            alignItems: 'center'
-                        }
-                    }}
-                >
-                    <AlertTitle sx={{
-                        fontWeight: 600,
-                        mb: 0.5,
-                        color: 'onSurface.main'
-                    }}>
-                        Полезный лайфхак
-                    </AlertTitle>
-                    {loadingFact ? (
-                        <Box display="flex" justifyContent="center">
-                            <CircularProgress size={20} color="inherit" />
-                        </Box>
-                    ) : (
-                        <Typography variant="body2" component="div" sx={{ color: 'onSurfaceVariant.main' }}>
-                            {currentFact || "Для лучшего запоминания правил пробуйте объяснять их своими словами"}
-                        </Typography>
-                    )}
-                </Alert>
-                <Box sx={{ mt: 5 }}>
-                    <div id="yandex_rtb_R-A-16171095-1" />
-                            <Script id="yandex-rtb-block" strategy="afterInteractive">
-                                {`
-                    window.yaContextCb.push(() => {
-                        Ya.Context.AdvManager.render({
-                            "blockId": "R-A-16171095-1",
-                            "renderTo": "yandex_rtb_R-A-16171095-1"
-                        });
-                    });
-                `}
-                    </Script>
-                </Box>
+
+            {/* Лайфхак */}
 
 
-            </FadeContainer>
-            <FadeContainer></FadeContainer>
-            <Dialog
-                open={!!openCategory}
-                onClose={() => setOpenCategory(null)}
-                fullWidth
-                maxWidth="xs"
-                PaperProps={{
-                    sx: {
-                        borderRadius: 2,
-                        m: 1,
-                        maxHeight: '120vh',
-                        animation: `${fadeIn} 0.3s ease-out`
-                    }
-                }}
-            >
+            {/* Диалог категории */}
+            <Dialog open={!!openCategory} onClose={() => setOpenCategory(null)} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 2, m: 1, maxHeight: '120vh', animation: `${fadeIn} 0.3s ease-out` } }}>
                 {openCategory && (
                     <>
-                        <Box sx={{
-                            p: 2,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            borderBottom: '1px solid',
-                            borderColor: 'divider'
-                        }}>
-                            <Typography variant="subtitle1" fontWeight={600}>
-                                {openCategory.name}
-                            </Typography>
-                            <IconButton onClick={() => setOpenCategory(null)} size="small">
-                                <Close fontSize="small" />
-                            </IconButton>
+                        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+                            <Typography variant="subtitle1" fontWeight={600}>{openCategory.name}</Typography>
+                            <IconButton onClick={() => setOpenCategory(null)} size="small"><Close fontSize="small" /></IconButton>
                         </Box>
-
-                        <Box sx={{
-                            p: 2,
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: 1.5
-                        }}>
-                            {Array.from(
-                                { length: openCategory.range[1] - openCategory.range[0] + 1 },
-                                (_, i) => {
-                                    const taskNumber = openCategory.range[0] + i;
-                                    const isLocked = lockedTasks.includes(taskNumber);
-
-                                    return (
-                                        <Tooltip
-                                            key={taskNumber}
-                                            title={isLocked ? "Тестируется" : ""}
-                                            placement="top"
-                                        >
-                                            <Box sx={{ position: 'relative' }}>
-                                                {isLocked && (
-                                                    <LockIcon
-                                                        sx={{
-                                                            position: 'absolute',
-                                                            top: 8,
-                                                            right: 8,
-                                                            zIndex: 0,
-                                                            color: 'text.disabled'
-                                                        }}
-                                                    />
-                                                )}
-                                                <Button
-                                                    component={isLocked ? 'button' : Link}
-                                                    href={isLocked ? undefined : `/theory?q=${taskNumber}`}
-                                                    variant="outlined"
-                                                    size="small"
-                                                    disabled={isLocked}
-                                                    sx={{
-                                                        height: 80,
-                                                        borderRadius: 2,
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        transition: 'all 0.2s ease',
-                                                        '&:hover': {
-                                                            transform: isLocked ? 'none' : 'translateY(-2px)',
-                                                            boxShadow: isLocked ? 'none' : 'none'
-                                                        },
-                                                        opacity: isLocked ? 0.6 : 1,
-                                                        width: '100%'
-                                                    }}
-                                                >
-                                                    <span style={{ fontSize: '1rem' }}>Задание</span>
-                                                    <span>№{taskNumber}</span>
-                                                </Button>
-                                            </Box>
-                                        </Tooltip>
-                                    );
-                                }
-                            )}
+                        <Box sx={{ p: 2, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
+                            {Array.from({ length: openCategory.range[1] - openCategory.range[0] + 1 }, (_, i) => {
+                                const taskNumber = openCategory.range[0] + i;
+                                const isLocked = lockedTasks.includes(taskNumber);
+                                return (
+                                    <Tooltip key={taskNumber} title={isLocked ? "Тестируется" : ""} placement="top">
+                                        <Box sx={{ position: 'relative' }}>
+                                            {isLocked && <LockIcon sx={{ position: 'absolute', top: 8, right: 8, zIndex: 0, color: 'text.disabled' }} />}
+                                            <Button
+                                                component={isLocked ? 'button' : Link}
+                                                href={isLocked ? undefined : `/theory?q=${taskNumber}`}
+                                                variant="outlined"
+                                                size="small"
+                                                disabled={isLocked}
+                                                sx={{ height: 80, borderRadius: 2, display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease', '&:hover': { transform: isLocked ? 'none' : 'translateY(-2px)' }, opacity: isLocked ? 0.6 : 1, width: '100%' }}
+                                            >
+                                                <span style={{ fontSize: '1rem' }}>Задание</span>
+                                                <span>№{taskNumber}</span>
+                                            </Button>
+                                        </Box>
+                                    </Tooltip>
+                                );
+                            })}
                         </Box>
                     </>
                 )}

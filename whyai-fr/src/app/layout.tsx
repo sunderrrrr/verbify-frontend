@@ -5,6 +5,7 @@ import { Footer } from '@/app/_components/footer';
 import CookieWarning from './_components/cookieWarn';
 import AuthInit from './_components/authInit';
 import Script from "next/script";
+import EmotionCacheProvider from "@/app/EmotionCacheProvider";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -41,11 +42,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 margin: 0,
             }}
         >
+        <EmotionCacheProvider>
         <Providers>
             <AuthInit />
             {children}
             <CookieWarning />
         </Providers>
+        </EmotionCacheProvider>
         <Footer />
         </body>
         </html>
