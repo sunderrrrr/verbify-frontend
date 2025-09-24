@@ -1,24 +1,28 @@
 'use client';
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import {
     Box,
     Button,
-    Container,
-    Typography,
-    useMediaQuery,
-    keyframes,
-    styled,
-    TextField,
-    Tabs,
-    Tab,
     Card,
     CardContent,
+    Checkbox,
+    Chip,
     CircularProgress,
+    Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     FormControlLabel,
-    Radio,
-    RadioGroup
+    keyframes,
+    styled,
+    Tab,
+    Tabs,
+    TextField,
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import {useTheme} from '@mui/material/styles';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -35,10 +39,16 @@ export default function ProfilePage() {
     const [tab, setTab] = useState(0);
     const [loadingStats, setLoadingStats] = useState(true);
     const [stats, setStats] = useState({
-        registeredAt: '2024-04-12',
-        totalQuestions: 87,
-        essaysChecked: 12,
-        currentPlan: 'Базовая'
+        avgEssayScore: 72,
+        chatQuestions: 348,
+        essaysChecked: 14,
+        lastEssayDate: '2025-09-12'
+    });
+
+    const [user, setUser] = useState({
+        name: 'Иван Петров',
+        email: 'ivan@example.com',
+        goal: 'Сдать ЕГЭ на 90+'
     });
 
     const [plans, setPlans] = useState([
@@ -46,28 +56,40 @@ export default function ProfilePage() {
             name: 'Базовая',
             description: '15 вопросов в день, 3 проверки сочинения, реклама',
             price: 0,
-            active: true
+            active: true,
+            badge: null
         },
         {
             name: 'Премиум',
-            description: '25 вопросов в день, 6 проверок, без рекламы',
+            description: '25 вопросов в день, 6 проверок, без рекламы, доступ к AI-советам',
             price: 400,
-            active: false
+            active: false,
+            badge: '🔥 Популярно'
         },
         {
             name: 'Ультра',
-            description: 'Бесконечные вопросы, 10 проверок, тест-система',
+            description: 'Безлимит, 10 проверок, расширенная аналитика, приоритетная проверка',
             price: 1000,
-            active: false
+            active: false,
+            badge: '⭐ Лучший выбор'
         }
     ]);
 
+    const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+    const [newGoal, setNewGoal] = useState(user.goal);
+
     useEffect(() => {
-        // Имитация запроса на сервер
         setTimeout(() => {
             setLoadingStats(false);
         }, 1000);
     }, []);
+
+    const handleOpenGoalDialog = () => setGoalDialogOpen(true);
+    const handleCloseGoalDialog = () => setGoalDialogOpen(false);
+    const handleSaveGoal = () => {
+        setUser(prev => ({ ...prev, goal: newGoal }));
+        setGoalDialogOpen(false);
+    };
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
@@ -98,7 +120,7 @@ export default function ProfilePage() {
                         gap={4}
                         width="100%"
                     >
-                        {/* Смена пароля */}
+                        {/* Основные данные */}
                         <Box
                             sx={{
                                 bgcolor: 'background.paper',
@@ -107,7 +129,25 @@ export default function ProfilePage() {
                                 boxShadow: 1,
                                 display: 'flex',
                                 flexDirection: 'column',
-                                justifyContent: 'center',
+                                width: '100%',
+                            }}
+                        >
+                            <Typography variant="h6" fontWeight={600} mb={2}>
+                                Основные данные
+                            </Typography>
+                            <Typography><strong>Имя:</strong> {user.name}</Typography>
+                            <Typography><strong>Почта:</strong> {user.email}</Typography>
+                            <Typography mb={2}><strong>Цель подготовки:</strong> {user.goal}</Typography>
+                            <Button variant="outlined" onClick={handleOpenGoalDialog}>Обновить цель</Button>
+                        </Box>
+
+                        {/* Смена пароля */}
+                        <Box
+                            sx={{
+                                bgcolor: 'background.paper',
+                                p: 3,
+                                borderRadius: 2,
+                                boxShadow: 1,
                                 width: '100%',
                             }}
                         >
@@ -121,78 +161,51 @@ export default function ProfilePage() {
                                     color="primary"
                                     sx={{ minWidth: { xs: '100%', sm: '160px' } }}
                                 >
-                                    Сбросить
+                                    Сбросить пароль
                                 </Button>
                             </Box>
                         </Box>
 
-                        {/* Интерфейс */}
+                        {/* Уведомления */}
                         <Box
                             sx={{
                                 bgcolor: 'background.paper',
                                 p: 3,
                                 borderRadius: 2,
                                 boxShadow: 1,
-                                width: '100%',
-                            }}
-                        >
-                            <Typography variant="h6" fontWeight={600} mb={2}>
-                                Интерфейс
-                            </Typography>
-                            <Typography variant="subtitle2" mb={1}>
-                                Тема
-                            </Typography>
-                            <RadioGroup defaultValue="light" row>
-                                <FormControlLabel value="light" control={<Radio />} label="Светлая" />
-                                <FormControlLabel value="dark" control={<Radio />} label="Тёмная" />
-                            </RadioGroup>
-                        </Box>
-
-                        {/* Управление уведомлениями */}
-                        <Box
-                            sx={{
-                                bgcolor: 'background.paper',
-                                p: 3,
-                                borderRadius: 2,
-                                boxShadow: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
                                 width: '100%',
                             }}
                         >
                             <Typography variant="h6" fontWeight={600} mb={2}>
                                 Уведомления
                             </Typography>
-                            <Button variant="outlined" fullWidth>
-                                Управление уведомлениями
-                            </Button>
-                        </Box>
-
-                        {/* Дополнительно */}
-                        <Box
-                            sx={{
-                                bgcolor: 'background.paper',
-                                p: 3,
-                                borderRadius: 2,
-                                boxShadow: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                width: '100%',
-                            }}
-                        >
-                            <Typography variant="h6" fontWeight={600} mb={2}>
-                                Дополнительно
-                            </Typography>
-                            <Button variant="outlined" color="error" fullWidth>
-                                Удалить аккаунт
-                            </Button>
+                            <FormControlLabel control={<Checkbox disabled />} label="Напоминания о заданиях (в разработке)" />
+                            <FormControlLabel control={<Checkbox disabled />} label="Результаты проверок (в разработке)" />
+                            <FormControlLabel control={<Checkbox disabled />} label="Новости сервиса (в разработке)" />
                         </Box>
                     </Box>
+
+                    {/* Диалог для обновления цели */}
+                    <Dialog open={goalDialogOpen} onClose={handleCloseGoalDialog}>
+                        <DialogTitle>Обновить цель подготовки</DialogTitle>
+                        <DialogContent>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                label="Новая цель"
+                                type="text"
+                                fullWidth
+                                value={newGoal}
+                                onChange={(e) => setNewGoal(e.target.value)}
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseGoalDialog}>Отмена</Button>
+                            <Button variant="contained" onClick={handleSaveGoal}>Сохранить</Button>
+                        </DialogActions>
+                    </Dialog>
                 </FadeContainer>
             )}
-
 
             {tab === 1 && (
                 <FadeContainer>
@@ -207,14 +220,14 @@ export default function ProfilePage() {
                         <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr' }} gap={2}>
                             <Card>
                                 <CardContent>
-                                    <Typography fontWeight={600}>Дата регистрации</Typography>
-                                    <Typography color="text.secondary">{stats.registeredAt}</Typography>
+                                    <Typography fontWeight={600}>Средний балл по сочинениям</Typography>
+                                    <Typography color="text.secondary">{stats.avgEssayScore} / 100</Typography>
                                 </CardContent>
                             </Card>
                             <Card>
                                 <CardContent>
-                                    <Typography fontWeight={600}>Всего заданий</Typography>
-                                    <Typography color="text.secondary">{stats.totalQuestions}</Typography>
+                                    <Typography fontWeight={600}>Вопросов в чате</Typography>
+                                    <Typography color="text.secondary">{stats.chatQuestions}</Typography>
                                 </CardContent>
                             </Card>
                             <Card>
@@ -225,8 +238,8 @@ export default function ProfilePage() {
                             </Card>
                             <Card>
                                 <CardContent>
-                                    <Typography fontWeight={600}>Текущий план</Typography>
-                                    <Typography color="text.secondary">{stats.currentPlan}</Typography>
+                                    <Typography fontWeight={600}>Дата последнего сочинения</Typography>
+                                    <Typography color="text.secondary">{stats.lastEssayDate}</Typography>
                                 </CardContent>
                             </Card>
                         </Box>
@@ -251,9 +264,12 @@ export default function ProfilePage() {
                                 }}
                             >
                                 <CardContent>
-                                    <Typography variant="h6" fontWeight={600}>
-                                        {plan.name}
-                                    </Typography>
+                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                                        <Typography variant="h6" fontWeight={600}>
+                                            {plan.name}
+                                        </Typography>
+                                        {plan.badge && <Chip label={plan.badge} color="secondary" size="small" />}
+                                    </Box>
                                     <Typography variant="body2" color="text.secondary" mb={2}>
                                         {plan.description}
                                     </Typography>

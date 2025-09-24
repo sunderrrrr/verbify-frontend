@@ -1,16 +1,14 @@
 'use client';
-import { Button } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../_stores/authStore';
+import {Button} from '@mui/material';
+import {useRouter} from 'next/navigation';
 import {Person2Outlined} from '@mui/icons-material';
-import theme from "@/app/_config/theme";
 
 export function UserButton() {
     const router = useRouter();
 
 
     const handleUser = () => {
-        router.push('/soon');
+        router.push('/profile');
     };
 
     // @ts-ignore

@@ -1,12 +1,12 @@
 'use client';
-import { AppBar as MuiAppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { useAuthStore } from '../_stores/authStore';
+import {AppBar as MuiAppBar, Box, Button, Toolbar} from '@mui/material';
+import {useAuthStore} from '../_stores/authStore';
 import NextLink from 'next/link';
 import Image from 'next/image';
-import { LogoutButton } from "@/app/_components/logout";
-import { UserButton } from "@/app/_components/user";
+import {LogoutButton} from "@/app/_components/logout";
+import {UserButton} from "@/app/_components/user";
 import theme from '../_config/theme';
-import {Home, Logout} from "@mui/icons-material";
+import {Home} from "@mui/icons-material";
 
 export default function AppBar() {
     const { token } = useAuthStore();
@@ -56,7 +56,7 @@ export default function AppBar() {
                     )}
                 </Box>
 
-                {/* Правый блок - Кнопки авторизации или профиль */}
+
                 <Box>
                     {!token ? (
                         <Box sx={{ display: 'flex', gap: 1 }}>
