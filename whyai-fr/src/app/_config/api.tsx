@@ -8,7 +8,6 @@ const apiClient = axios.create({
     },
 });
 
-// Интерцептор для обработки ошибок
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {

@@ -1,9 +1,9 @@
 'use client';
-import { Button } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../_stores/authStore';
-import { Logout } from '@mui/icons-material';
-import theme from '../_config/theme';
+import {Button} from '@mui/material';
+import {useRouter} from 'next/navigation';
+import {useAuthStore} from '../_stores/authStore';
+import {Logout} from '@mui/icons-material';
+
 export function LogoutButton() {
     const router = useRouter();
     const logout = useAuthStore((state) => state.logout);
@@ -12,9 +12,7 @@ export function LogoutButton() {
         logout();
         router.push('/login');
     };
-
-    // @ts-ignore
-    // @ts-ignore
+    
     return (
         <Button
             variant="text"

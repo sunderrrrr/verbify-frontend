@@ -1,19 +1,22 @@
-FROM node:18
-
+FROM node:20-alpine AS development
 WORKDIR /app
-
+COPY package.json package-lock.json* ./
+RUN --mount=type=cache,target=/root/.npm npm ci
 COPY . .
-
-RUN npm install
-
-# Отключаем telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Собираем проект (build)
-RUN npm run build
-
-# Пробрасываем порт 3000
+ENV PORT=3000
+ENV NODE_ENV=development
 EXPOSE 3000
+CMD ["npm", "run", "dev"]
 
-# Запускаем продакшн-сервер
+FROM node:20-alpine AS production
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+COPY . .
+RUN npm run build
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV NODE_ENV=production
+EXPOSE 3000
 CMD ["npm", "run", "start"]

@@ -1,38 +1,37 @@
 'use client';
-import { JSX, useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import {useEffect, useRef, useState} from 'react';
+import {useRouter} from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
+    Alert,
     Box,
     Button,
-    Container,
-    CircularProgress,
-    Alert,
-    Snackbar,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Checkbox,
-    FormControlLabel,
-    TextField,
-    Typography,
-    Link,
-    styled,
-    keyframes,
-    useMediaQuery,
-    Chip,
-    Stack,
     Card,
     CardContent,
-    Grow,
+    Checkbox,
+    Chip,
+    CircularProgress,
+    Container,
     Fade,
-    Slide
+    FormControl,
+    FormControlLabel,
+    Grow,
+    InputLabel,
+    keyframes,
+    Link,
+    MenuItem,
+    Select,
+    Slide,
+    Snackbar,
+    Stack,
+    styled,
+    TextField,
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import { Star, Info } from '@mui/icons-material';
+import {Star} from '@mui/icons-material';
 import theme from "@/app/_config/theme";
-import {YandexAd} from "@/app/_components/yandexAd";
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/essay`;
 const LOCAL_STORAGE_KEY = 'lastEssayResult';
@@ -425,13 +424,6 @@ export default function EssayPage() {
                     </Box>
                 </MarkdownContainer>
             )}
-            <YandexAd
-                blockId="R-A-123456-1"
-                params={{
-                    statId: 123456,
-                    async: true
-                }}
-            />
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}

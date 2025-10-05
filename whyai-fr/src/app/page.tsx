@@ -1,29 +1,27 @@
 'use client';
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import {
+    Alert,
+    AlertTitle,
     Box,
     Button,
+    CircularProgress,
     Container,
     Dialog,
-    Typography,
     IconButton,
-
-    useMediaQuery,
-    AlertTitle,
-    Alert,
     keyframes,
     styled,
-    Tooltip
+    Tooltip,
+    Typography,
+    useMediaQuery
 } from '@mui/material';
-import { ArrowForward, Close } from '@mui/icons-material';
+import {ArrowForward, Close, TipsAndUpdates} from '@mui/icons-material';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useTheme } from '@mui/material/styles';
-import TipsAndUpdates from '@mui/icons-material/TipsAndUpdates';
-import Cookies from "js-cookie";
+import {useRouter} from 'next/navigation';
+import {useTheme} from '@mui/material/styles';
 import LockIcon from '@mui/icons-material/Lock';
-import Script from "next/script";
 import TGBanner from "@/app/_components/telegram";
+import {useAuthStore} from "./_stores/authStore";
 
 interface Category {
     name: string;
@@ -48,6 +46,7 @@ export default function HomePage() {
 
     // Хуки вызываем всегда
     const [mounted, setMounted] = useState(false);
+    const { token, isAuthenticated, initialize } = useAuthStore();
     const [openCategory, setOpenCategory] = useState<Category | null>(null);
     const [currentFact, setCurrentFact] = useState<string>('');
     const [loadingFact, setLoadingFact] = useState<boolean>(false);
@@ -55,19 +54,17 @@ export default function HomePage() {
     const [lockedPractice] = useState<string[]>(['ai-test']);
     const BaseApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-    // Состояние mounted нужно для безопасного доступа к window/Cookies
     useEffect(() => {
         setMounted(true);
+        initialize(); // Инициализируем состояние из cookies
     }, []);
 
-    const isAuthenticated = mounted ? Cookies.get("isAuthenticated") : null;
-
-    // Редирект только после mounted
+    // Редирект если не авторизован
     useEffect(() => {
-        if (mounted && isAuthenticated !== "1") {
+        if (mounted && !token) {
             router.push('/login');
         }
-    }, [mounted, isAuthenticated, router]);
+    }, [mounted, token, router]);
 
     useEffect(() => {
         const array = Array.from({ length: 18 }, (_, i) => i + 9);
@@ -118,17 +115,13 @@ export default function HomePage() {
         { name: '📃 Пунктуация', description: "Знаки препинания в предложениях", range: [16, 21], color: theme.palette.primary.light },
         { name: '📖 Текст', description: "Чтение и анализ содержимого текста", range: [22, 26], color: theme.palette.primary.light },
     ];
-
-    // Пока mounted не true, можно рендерить спиннер
-
-
     return (
         <Container maxWidth="md" sx={{ py: 3, px: { xs: 1.5, sm: 1 } }}>
             <FadeContainer>
-                <Typography variant="h5" sx={{ mb: 2, fontWeight: 700, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1.25rem' : '1.7rem' }}>
-                    ИИ-Репетитор
+                <Typography variant="h3" sx={{ mb: 2, fontWeight: 1000, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1.7rem' : '2.5rem' }}>
+                    Verbify
                 </Typography>
-                <Typography variant="h1" sx={{ mb: 6, fontWeight: 700, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1rem' : '1.25rem' }}>
+                <Typography variant="h1" sx={{ mb: 3, fontWeight: 700, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1rem' : '1.25rem' }}>
                     Выбери раздел для изучения
                 </Typography>
             </FadeContainer>
@@ -153,16 +146,14 @@ export default function HomePage() {
                     ))}
                 </Box>
             </FadeContainer>
-
-            {/* Практика */}
             <FadeContainer>
                 <Typography variant="h6" sx={{ mt: 6, mb: 3, fontWeight: 700, textAlign: 'center', color: 'text.primary', fontSize: isMobile ? '1.1rem' : '1.5rem' }}>
                     ИИ-Практика
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center', alignItems: 'stretch' }}>
                     {[
-                        { id: 'ai-test', title: 'Тест с ИИ-Анализом' },
-                        { id: 'ai-essay', title: 'ИИ-Проверка сочинения' }
+                        { id: 'ai-test', title: '✅ Тест с ИИ-Анализом' },
+                        { id: 'ai-essay', title: '🧠 ИИ-Проверка сочинения' }
                     ].map(practice => {
                         const isLocked = lockedPractice.includes(practice.id);
                         return (
@@ -188,7 +179,7 @@ export default function HomePage() {
                                             transition: 'all 0.3s ease'
                                         }}
                                     >
-                                        ⭐ {practice.title}
+                                        {practice.title}
                                     </Button>
                                 </Box>
                             </Tooltip>
@@ -235,6 +226,43 @@ export default function HomePage() {
                     </>
                 )}
             </Dialog>
+            <FadeContainer>
+                <Alert
+                    severity="info"
+                    icon={<TipsAndUpdates fontSize="small" />}
+                    sx={{
+                        borderRadius: 2,
+                        marginTop: 5,
+                        bgcolor: 'surfaceContainerLow.main',
+                        color: 'onSurfaceVariant.main',
+                        border: 'none',
+                        '& .MuiAlert-icon': {
+                            color: 'primary.main',
+                            alignItems: 'center'
+                        }
+                    }}
+                >
+                    <AlertTitle sx={{
+                        fontWeight: 600,
+                        mb: 0.5,
+                        color: 'onSurface.main'
+                    }}>
+                        Полезный лайфхак
+                    </AlertTitle>
+                    {loadingFact ? (
+                        <Box display="flex" justifyContent="center">
+                            <CircularProgress size={20} color="inherit" />
+                        </Box>
+                    ) : (
+                        <Typography variant="body2" component="div" sx={{ color: 'onSurfaceVariant.main' }}>
+                            {currentFact || "Для лучшего запоминания правил пробуйте объяснять их своими словами"}
+                        </Typography>
+                    )}
+                </Alert>
+
+
+            </FadeContainer>
+
         </Container>
     );
 }

@@ -1,17 +1,16 @@
 'use client';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, TextField, Link, Typography, Container, Box, Stack, Divider, Alert } from '@mui/material';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {Alert, Box, Button, Container, Link, Stack, TextField, Typography} from '@mui/material';
+import {useForm} from 'react-hook-form';
+import {z} from 'zod';
 import apiClient from '../../_config/api';
-import { useAuthStore } from '../../_stores/authStore';
-import { motion } from 'framer-motion';
-import { Google } from '@mui/icons-material';
+import {useAuthStore} from '../../_stores/authStore';
+import {motion} from 'framer-motion';
 import NextLink from 'next/link';
 import theme from '../../_config/theme';
 import config from '../../_config/app';
 import Image from "next/image";
-import { useRouter } from 'next/navigation';
+import {useRouter} from 'next/navigation';
 import React from "react";
 
 const schema = z.object({
@@ -37,17 +36,17 @@ export default function LoginPage() {
 
             // Проверяем ответ API
             if (response.data.result === 'sign in failed') {
-                setErrorMessage('Пароль неверный или пользователя не существует🤔');
+                setErrorMessage('Пароль неверный или пользователя не существует 🤔');
                 return;
             }
 
             // Если успех
-            localStorage.setItem("token", response.data.token);
             setAuth(response.data.token);
+
             router.push('/');
         } catch (error) {
             console.error('Ошибка логина:', error);
-            setErrorMessage('Пароль неверный или пользователя не существует🤔');
+            setErrorMessage('Пароль неверный или пользователя не существует 🤔');
         }
     };
 
@@ -73,7 +72,7 @@ export default function LoginPage() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: 1,
-                        fontWeight: 700,
+                        fontWeight: 1000,
                         background: theme.palette.primary.main,
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
@@ -129,7 +128,6 @@ export default function LoginPage() {
                         }}
                     />
 
-                    {/* Ошибка входа */}
                     {errorMessage && (
                         <Alert severity="error" sx={{ mt: -2, mb: 2 }}>
                             {errorMessage}
@@ -156,24 +154,6 @@ export default function LoginPage() {
                     >
                         {isSubmitting ? 'Входим...' : 'Войти'}
                     </MotionButton>
-
-                    <Divider sx={{ color: 'text.secondary' }}>Другие варианты:</Divider>
-
-                    <Stack direction="row" spacing={2} justifyContent="center">
-                        <Button
-                            variant="outlined"
-                            startIcon={<Google />}
-                            sx={{
-                                flex: 1,
-                                borderRadius: 3,
-                                textTransform: 'none',
-                                py: 1.5
-                            }}
-                        >
-                            Google
-                        </Button>
-                    </Stack>
-
                     <Typography variant="body2" textAlign="center" sx={{ mt: 2 }}>
                         Ты новенький?{' '}
                         <Link

@@ -19,10 +19,17 @@ export default function AppBar() {
                 bgcolor: theme.palette.primary.main,
                 color: 'text.primary',
                 borderBottom: '1px solid',
-                borderColor: 'divider'
+                borderColor: 'divider',
+                borderBottomLeftRadius: 16,
+                borderBottomRightRadius: 16,
+                borderTopLeftRadius: 0,
+                borderTopRightRadius: 0,
             }}
         >
-            <Toolbar sx={{ justifyContent: 'space-between' }}>
+            <Toolbar sx={{
+                justifyContent: 'space-between',
+
+            }}>
                 {/* Левый блок - Логотип и основные кнопки */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Image

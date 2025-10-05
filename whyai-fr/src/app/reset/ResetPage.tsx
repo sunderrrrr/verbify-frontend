@@ -1,20 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import {
+    Alert,
     Box,
     Button,
-    Container,
-    TextField,
-    Typography,
-    Alert,
     CircularProgress,
     keyframes,
-    styled,
-    useTheme,
     Paper,
+    styled,
+    TextField,
+    Typography,
+    useTheme,
 } from '@mui/material';
-import { useSearchParams, useRouter } from 'next/navigation';
+import {useRouter, useSearchParams} from 'next/navigation';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(30px); }
@@ -24,7 +23,7 @@ const fadeInUp = keyframes`
 const FadePaper = styled(Paper)(({ theme }) => ({
     animation: `${fadeInUp} 0.6s ease-out both`,
     padding: theme.spacing(5),
-    borderRadius: theme.shape.borderRadius * 2,
+    borderRadius: 8 * 2,
     maxWidth: 480,
     margin: 'auto',
     boxShadow: theme.shadows[8],

@@ -1,16 +1,15 @@
 'use client';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, TextField, Divider, Typography, Container, Box, Stack, Link, Alert } from '@mui/material';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { motion } from 'framer-motion';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {Alert, Box, Button, Container, Link, Stack, TextField, Typography} from '@mui/material';
+import {useForm} from 'react-hook-form';
+import {z} from 'zod';
+import {motion} from 'framer-motion';
 import NextLink from 'next/link';
 import apiClient from '../../_config/api';
-import { Google } from '@mui/icons-material';
 import config from '../../_config/app';
 import Image from "next/image";
 import theme from "@/app/_config/theme";
-import { useState } from 'react';
+import {useState} from 'react';
 
 const schema = z.object({
     email: z.string().email('Некорректный email').min(1, 'Обязательное поле'),
@@ -37,12 +36,10 @@ export default function RegisterPage() {
             await apiClient.post(config.api.endpoints.register, data);
             window.location.href = '/login';
         } catch (error: any) {
-            console.error('Ошибка регистрации:', error);
-            // Попытка достать сообщение ошибки от сервера, или дефолтное
             if (error?.response?.data?.result === "user exists") {
-                setErrorMessage('Ошибка регистрации: Возможно пользователь с таким email уже существует🤔\n Поменяйте данные или подождите');
+                setErrorMessage('Ошибка регистрации: Возможно пользователь с таким email уже существует 🤔\n Поменяйте данные или подождите');
             } else {
-                setErrorMessage('Ошибка регистрации: Возможно пользователь с таким email уже существует🤔\n Поменяйте данные или подождите');
+                setErrorMessage('Ошибка регистрации: Возможно пользователь с таким email уже существует 🤔\n Поменяйте данные или подождите');
             }
         }
     };
@@ -82,7 +79,7 @@ export default function RegisterPage() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: 1,
-                        fontWeight: 700,
+                        fontWeight: 1000,
                         background: theme.palette.primary.main,
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
@@ -191,27 +188,7 @@ export default function RegisterPage() {
                             'Зарегистрироваться'
                         )}
                     </MotionButton>
-
-                    <Divider sx={{ color: 'text.secondary' }}>или</Divider>
-
-                    <Stack direction="row" spacing={2} justifyContent="center">
-                        <Button
-                            variant="outlined"
-                            startIcon={<Google />}
-                            component={motion.div}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            sx={{
-                                flex: 1,
-                                borderRadius: 2,
-                                textTransform: 'none',
-                                py: 1.5
-                            }}
-                        >
-                            Google
-                        </Button>
-                    </Stack>
-
+                    
                     <Typography variant="body2" textAlign="center" sx={{ mt: 2 }}>
                         Уже есть аккаунт?{' '}
                         <Link

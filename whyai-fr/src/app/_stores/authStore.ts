@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import {create} from 'zustand';
 import Cookies from 'js-cookie';
 
 type AuthState = {
@@ -9,40 +9,40 @@ type AuthState = {
     initialize: () => void;
 };
 
-export const useAuthStore = create<AuthState>()((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
     token: null,
     isAuthenticated: false,
 
-    // Инициализация состояния при загрузке
     initialize: () => {
         const token = Cookies.get('authToken');
         if (token) {
-            set({ token, isAuthenticated: false });
+            set({ token, isAuthenticated: true });
         }
     },
 
-    // Установка авторизации
-    setAuth: (token) => {
-        Cookies.set('authToken', token, {
-            expires: 0.5,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
-        });
-        Cookies.set('isAuthenticated', "1", {
-            expires: 0.5,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
-        });
-        set({ token, isAuthenticated: true });
+    setAuth: (token: string) => {
+        try {
+            // Сохраняем в куки
+            Cookies.set('authToken', token, {
+                expires: 7,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+            });
+
+            // Проверяем сохранение
+            const savedToken = Cookies.get('authToken');
+            console.log('Токен сохранен в куках:', savedToken);
+
+            // Обновляем состояние
+            set({ token, isAuthenticated: true });
+        } catch (error) {
+            console.error('Ошибка сохранения токена:', error);
+        }
     },
 
-    // Выход из системы
     logout: () => {
-        Cookies.remove('authToken');
-        Cookies.set('isAuthenticated', "0", {
-            expires: 7,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
-        });
+        Cookies.remove('authToken', { path: '/' });
+        set({ token: null, isAuthenticated: false });
     }
 }));

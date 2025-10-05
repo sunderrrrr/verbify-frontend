@@ -1,9 +1,9 @@
-import { createTheme } from '@mui/material/styles';
+import {createTheme} from '@mui/material/styles';
 
 const baseTheme = createTheme({
     palette: {
         primary: {
-            main: 'rgba(229,169,103,0.97)', // Насыщенный зелёный (как листья растений)
+            main: '#fbc497',
             light: '#ffdcbe', // Светло-зелёный фон
             dark: 'rgba(210,149,82,0.71)', // Тёмно-зелёный акцент
         },
@@ -11,7 +11,7 @@ const baseTheme = createTheme({
             main: '#FFB300', // Тёплый жёлтый для акцентов
         },
         success: {
-            main: '#388E3C', // Зелёный для выполненных задач
+            main: '#76ff7d', // Зелёный для выполненных задач
         },
         background: {
             default: '#F5F5F5', // Светло-серый фон
@@ -31,7 +31,7 @@ const baseTheme = createTheme({
                 root: {
                     color: '#757575',
                     '&.Mui-checked': {
-                        color: '#388E3C',
+                        color: '#f8c498',
                     },
                 },
             },
@@ -61,12 +61,12 @@ const baseTheme = createTheme({
                 h1: {
                     fontSize: '1.5rem',
                     fontWeight: 600,
-                    color: '#1B5E20',
+                    color: '#ffa447',
                 },
                 h2: {
                     fontSize: '1.25rem',
                     fontWeight: 500,
-                    color: '#2E7D32',
+                    color: '#ffa447',
                     margin: '16px 0',
                 },
             },

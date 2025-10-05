@@ -1,29 +1,29 @@
 'use client';
-import { JSX, useEffect, useState, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import {useEffect, useRef, useState} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
+    Alert,
     AppBar,
     Box,
     Button,
-    Container,
-    IconButton,
-    TextField,
-    Typography,
-    Link,
     CircularProgress,
-    Alert,
-    Snackbar,
-    keyframes,
-    styled,
+    Container,
     Dialog,
-    DialogTitle,
+    DialogActions,
     DialogContent,
     DialogContentText,
-    DialogActions
+    DialogTitle,
+    IconButton,
+    keyframes,
+    Link,
+    Snackbar,
+    styled,
+    TextField,
+    Typography
 } from '@mui/material';
-import { Send, ArrowBack, Delete, Close as CloseIcon } from '@mui/icons-material';
+import {ArrowBack, Close as CloseIcon, Delete, Send} from '@mui/icons-material';
 import Script from 'next/script';
 import Image from 'next/image';
 
@@ -41,7 +41,7 @@ interface ChatResponseItem {
     user_id: number;
     task_id: number;
     role: string;
-    content: string;
+    content: string | object;
     created_at: string;
 }
 
@@ -57,17 +57,23 @@ const typingAnimation = keyframes`
 `;
 
 const MessageContainer = styled(Box)(({ theme }) => ({
-    maxWidth: '80%',
-    borderRadius: theme.shape.borderRadius,
+    maxWidth: '85%',
+    borderRadius: 8* 2,
     padding: theme.spacing(2),
     marginBottom: theme.spacing(2),
     boxShadow: theme.shadows[1],
+    wordWrap: 'break-word',
+    wordBreak: 'break-word',
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'anywhere',
     animation: `${fadeIn} 0.3s ease-out`,
     '& pre': {
         backgroundColor: theme.palette.grey[100],
         padding: theme.spacing(1),
         borderRadius: theme.shape.borderRadius,
-        overflowX: 'auto'
+        overflowX: 'auto',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word'
     }
 }));
 
@@ -79,18 +85,45 @@ const TypingIndicator = styled(Box)(({ theme }) => ({
 }));
 
 const MarkdownComponents = {
-    p: ({ children }: any) => <Typography paragraph sx={{ margin: 0 }}>{children}</Typography>,
-    a: ({ children, href }: any) => <Link href={href} target="_blank" rel="noopener">{children}</Link>,
-    ul: ({ children }: any) => <ul style={{ paddingLeft: '20px', margin: '8px 0' }}>{children}</ul>,
-    ol: ({ children }: any) => <ol style={{ paddingLeft: '20px', margin: '8px 0' }}>{children}</ol>,
+    p: ({ children }: any) => (
+        <Typography
+            paragraph
+            sx={{
+                margin: 0,
+                wordBreak: 'break-word',
+                overflowWrap: 'anywhere'
+            }}
+        >
+            {children}
+        </Typography>
+    ),
+    a: ({ children, href }: any) => (
+        <Link
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ wordBreak: 'break-all', color: 'primary.main' }}
+        >
+            {children}
+        </Link>
+    ),
+    ul: ({ children }: any) => (
+        <ul style={{ paddingLeft: '20px', margin: '8px 0', overflowWrap: 'anywhere' }}>{children}</ul>
+    ),
+    ol: ({ children }: any) => (
+        <ol style={{ paddingLeft: '20px', margin: '8px 0', overflowWrap: 'anywhere' }}>{children}</ol>
+    ),
     li: ({ children }: any) => <li style={{ marginBottom: '4px' }}>{children}</li>,
     code: ({ children }: any) => (
-        <code style={{
-            backgroundColor: '#f5f5f5',
-            padding: '2px 4px',
-            borderRadius: '6px',
-            fontFamily: 'monospace'
-        }}>
+        <code
+            style={{
+                backgroundColor: '#f5f5f5',
+                padding: '2px 4px',
+                borderRadius: '6px',
+                fontFamily: 'monospace',
+                wordBreak: 'break-all'
+            }}
+        >
             {children}
         </code>
     )
@@ -114,22 +147,17 @@ export default function ChatPage() {
 
     const getToken = () => {
         if (typeof window === 'undefined') return '';
-        const cookies = document.cookie.split('; ');
-        const tokenCookie = cookies.find(cookie => cookie.startsWith('authToken='));
+        const tokenCookie = document.cookie.split('; ').find(c => c.startsWith('authToken='));
         return tokenCookie ? tokenCookie.split('=')[1] : '';
     };
 
     useEffect(() => {
         const token = getToken();
-        if (!token) {
-            router.push('/login');
-        }
+        if (!token) router.push('/login');
     }, [router]);
 
     useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isBotTyping]);
 
     const getAuthHeaders = () => {
@@ -139,7 +167,7 @@ export default function ChatPage() {
             return null;
         }
         return {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
         };
     };
@@ -161,15 +189,15 @@ export default function ChatPage() {
             }
 
             const data = await response.json();
+
             return (data.result || [])
                 .filter((item: ChatResponseItem) => item?.content && item.role !== 'system')
                 .map((item: ChatResponseItem) => ({
                     id: `msg-${item.id}`,
-                    content: item.content,
+                    content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content),
                     isBot: item.role === 'assistant',
                     createdAt: item.created_at
                 }));
-
         } catch (error) {
             console.error('Ошибка загрузки истории:', error);
             return [];
@@ -178,30 +206,26 @@ export default function ChatPage() {
 
     useEffect(() => {
         if (!taskNumber) return;
-
-        const loadInitialData = async () => {
+        const loadData = async () => {
             try {
                 setLoadingData(true);
                 const headers = getAuthHeaders();
                 if (!headers) return;
 
                 const [theoryResponse, chatHistory] = await Promise.all([
-                    fetch(`${API_BASE_URL}/theory/${taskNumber}`, {
-                        headers,
-                        credentials: 'include'
-                    }),
+                    fetch(`${API_BASE_URL}/theory/${taskNumber}`, { headers, credentials: 'include' }),
                     loadChatHistory()
                 ]);
 
                 if (!theoryResponse.ok) throw new Error('Ошибка загрузки теории');
-
                 const theoryData = await theoryResponse.json();
+
                 setTheoryContent(theoryData.theory || '');
 
                 const initialMessages: Message[] = [
                     {
                         id: 'welcome-msg',
-                        content: `Привет! Я ИИ для подготовки к **ЕГЭ по русскому языку**\n\n и помогу тебе с заданием №${taskNumber}!\n\n❓ **Что я умею:** \n\n⭐ Объяснять непонятные темы по заданию \n\n⭐ Приводить тебе примеры для лучшего запоминания \n\n ⭐ Подстраиваться под тебя и твой уровень знаний \n\n ⭐ Забыть все, если ты нажмешь на красную кнопку "стереть" \n\n Воспринимай меня как **репетитора**, к которому ты обычно ходишь \n\n(наверное 😁)\n\n[Скачать PDF Теории](/theory?q=${taskNumber})`,
+                        content: `Привет! Я ИИ для подготовки к **ЕГЭ по русскому языку**\n\n и помогу тебе с заданием №${taskNumber}!\n\n❓ **Что я умею:** \n\n⭐ Объяснять непонятные темы по заданию \n\n⭐ Приводить тебе примеры для лучшего запоминания \n\n⭐ Подстраиваться под тебя и твой уровень знаний \n\n⭐ Забыть все, если ты нажмёшь на кнопку "Стереть" \n\n[Скачать PDF Теории](/theory?q=${taskNumber})`,
                         isBot: true
                     }
                 ];
@@ -214,37 +238,29 @@ export default function ChatPage() {
                     });
                 }
 
-                if (chatHistory && chatHistory.length > 0) {
-                    initialMessages.push(...chatHistory);
-                }
-
+                if (chatHistory?.length) initialMessages.push(...chatHistory);
                 setMessages(initialMessages);
-
             } catch (err) {
-                const error = err as Error;
-                console.error('Ошибка загрузки:', error);
-                setError(error.message);
+                console.error('Ошибка загрузки:', err);
+                setError((err as Error).message);
                 setSnackbarOpen(true);
             } finally {
                 setLoadingData(false);
             }
         };
-
-        loadInitialData();
+        loadData();
     }, [taskNumber]);
 
     const handleDeleteHistory = async () => {
         if (!taskNumber) return;
         const headers = getAuthHeaders();
         if (!headers) return;
-
         try {
             const response = await fetch(`${API_BASE_URL}/theory/${taskNumber}/chat`, {
                 method: 'DELETE',
                 headers,
                 credentials: 'include'
             });
-
             if (response.ok) {
                 setMessages(prev => prev.filter(m => m.id === 'welcome-msg' || m.id === 'theory-msg'));
             }
@@ -253,94 +269,82 @@ export default function ChatPage() {
         }
     };
 
+    const sanitizeInput = (text: string) => {
+        return text.replace(/[<>]/g, '').trim(); // простая защита от HTML-инъекций
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || !taskNumber || loading) return;
 
+        const cleanInput = sanitizeInput(input);
         const headers = getAuthHeaders();
         if (!headers) return;
 
+        const userMessage: Message = {
+            id: `user-${Date.now()}`,
+            content: cleanInput,
+            isBot: false
+        };
+        setMessages(prev => [...prev, userMessage]);
+        setInput('');
         setLoading(true);
         setIsBotTyping(true);
 
         try {
-            setMessages(prev => [...prev, {
-                id: `user-${Date.now()}`,
-                content: input,
-                isBot: false
-            }]);
-            setInput('');
-
             const response = await fetch(`${API_BASE_URL}/theory/${taskNumber}/chat`, {
                 method: 'POST',
                 headers,
                 credentials: 'include',
                 body: JSON.stringify({
                     role: 'user',
-                    content: input,
+                    content: userMessage.content,
                     theory: theoryContent
                 })
             });
 
             if (response.status === 429) {
                 setRateLimitDialogOpen(true);
-                setLoading(false);
-                setIsBotTyping(false);
                 return;
             }
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) throw new Error(`HTTP error! ${response.status}`);
+
+            const data = await response.json();
+
+            if (data?.result) {
+                const botReply = data.result.find((r: ChatResponseItem) => r.role === 'assistant');
+                if (botReply) {
+                    const safeContent =
+                        typeof botReply.content === 'string'
+                            ? botReply.content
+                            : JSON.stringify(botReply.content, null, 2);
+                    setMessages(prev => [
+                        ...prev,
+                        { id: `bot-${botReply.id}`, content: safeContent, isBot: true, createdAt: botReply.created_at }
+                    ]);
+                }
             }
-
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Неверный формат ответа от сервера');
-            }
-
-            const responseData = await response.json();
-
-            if (!responseData || !responseData.result) {
-                throw new Error('Неверная структура ответа от сервера');
-            }
-
-            window.location.reload();
-
         } catch (err) {
-            const error = err as Error;
-            console.error('Ошибка:', error);
-            if (error.message.includes('Failed to fetch') || error.message.includes('ERR_EMPTY_RESPONSE')) {
-                setTimeout(() => window.location.reload(), 100);
-            }
+            console.error('Ошибка:', err);
+            setError((err as Error).message);
+            setSnackbarOpen(true);
         } finally {
             setLoading(false);
             setIsBotTyping(false);
         }
     };
 
-    const handleCloseSnackbar = () => {
-        setSnackbarOpen(false);
-    };
-
-    const handleCloseRateLimitDialog = () => {
-        setRateLimitDialogOpen(false);
-    };
-
-    if (loadingData) {
+    if (loadingData)
         return (
             <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
                 <CircularProgress />
             </Box>
         );
-    }
 
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <Script
-                src="https://yandex.ru/ads/system/context.js"
-                strategy="afterInteractive"
-                async
-            />
+            <Script src="https://yandex.ru/ads/system/context.js" strategy="afterInteractive" async />
 
             <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'background.paper' }}>
                 <Container maxWidth="md">
@@ -358,7 +362,8 @@ export default function ChatPage() {
                             onClick={handleDeleteHistory}
                             sx={{ ml: 'auto' }}
                             disabled={loading}
-                        > Стереть
+                        >
+                            Стереть
                         </Button>
                     </Box>
                 </Container>
@@ -371,8 +376,7 @@ export default function ChatPage() {
                     display: 'flex',
                     flexDirection: 'column',
                     py: 3,
-                    overflowY: 'auto',
-                    position: 'relative'
+                    overflowY: 'auto'
                 }}
             >
                 {messages.map((msg) => (
@@ -381,15 +385,13 @@ export default function ChatPage() {
                         sx={{
                             alignSelf: msg.isBot ? 'flex-start' : 'flex-end',
                             bgcolor: msg.isBot ? 'background.paper' : 'primary.light',
-                            color: msg.isBot ? 'text.primary' : 'primary.contrastText',
-                            ml: msg.isBot ? 0 : 'auto'
+                            color: msg.isBot ? 'text.primary' : 'primary.contrastText'
                         }}
                     >
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={MarkdownComponents}
-                        >
-                            {msg.content}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                            {typeof msg.content === 'string'
+                                ? msg.content
+                                : JSON.stringify(msg.content, null, 2)}
                         </ReactMarkdown>
                         {msg.createdAt && (
                             <Typography variant="caption" display="block" textAlign="right" mt={1}>
@@ -400,62 +402,16 @@ export default function ChatPage() {
                 ))}
 
                 {isBotTyping && (
-                    <MessageContainer
-                        sx={{
-                            alignSelf: 'flex-start',
-                            bgcolor: 'background.paper'
-                        }}
-                    >
+                    <MessageContainer sx={{ alignSelf: 'flex-start', bgcolor: 'background.paper' }}>
                         <TypingIndicator>
-                            <Box
-                                sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    bgcolor: 'text.primary'
-                                }}
-                            />
-                            <Box
-                                sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    bgcolor: 'text.primary',
-                                    animationDelay: '0.2s'
-                                }}
-                            />
-                            <Box
-                                sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    bgcolor: 'text.primary',
-                                    animationDelay: '0.4s'
-                                }}
-                            />
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'text.primary' }} />
                             <Typography variant="body2" sx={{ ml: 1 }}>
-                                {process.env.NEXT_PUBLIC_APP_NAME} печатает...
+                                {process.env.NEXT_PUBLIC_APP_NAME || 'Бот'} печатает...
                             </Typography>
                         </TypingIndicator>
                     </MessageContainer>
                 )}
-                <div ref={messagesEndRef} style={{ height: '1px' }} />
-            </Container>
-
-            {/* Рекламный блок Яндекс.Директ перед полем ввода */}
-            <Container maxWidth="md" sx={{ py: 1, textAlign: 'center' }}>
-                <div id="yandex_rtb_R-A-123456-7"></div>
-                <Script id="yandex-ads-script" strategy="afterInteractive">
-                    {`
-                        window.yaContextCb = window.yaContextCb || [];
-                        window.yaContextCb.push(() => {
-                            Ya.Context.AdvManager.render({
-                                renderTo: 'yandex_rtb_R-A-123456-7',
-                                blockId: 'R-A-123456-7'
-                            });
-                        });
-                    `}
-                </Script>
+                <div ref={messagesEndRef} />
             </Container>
 
             <Box
@@ -476,6 +432,7 @@ export default function ChatPage() {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         disabled={loading}
+                        inputProps={{ maxLength: 500 }}
                     />
                     <Button
                         type="submit"
@@ -495,44 +452,30 @@ export default function ChatPage() {
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}
-                onClose={handleCloseSnackbar}
+                onClose={() => setSnackbarOpen(false)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+                <Alert severity="error" sx={{ width: '100%' }}>
                     {error}
                 </Alert>
             </Snackbar>
 
-            {/* Диалог при ошибке 429 */}
-            <Dialog
-                open={rateLimitDialogOpen}
-                onClose={handleCloseRateLimitDialog}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle id="alert-dialog-title" sx={{ pb: 1 }}>
+            <Dialog open={rateLimitDialogOpen} onClose={() => setRateLimitDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <span>Ой, похоже вы исчерпали дневной лимит вопросов🥺</span>
-                        <IconButton onClick={handleCloseRateLimitDialog}>
+                        <IconButton onClick={() => setRateLimitDialogOpen(false)}>
                             <CloseIcon />
                         </IconButton>
                     </Box>
                 </DialogTitle>
-                <DialogContent sx={{ pt: 1 }}>
+                <DialogContent>
                     <Box display="flex" alignItems="center">
-                        <Box sx={{ mr: 3, flexShrink: 0 }}>
-                            <Image
-                                src="/whyai-logo.png"
-                                alt=""
-                                width={80}
-                                height={80}
-                                style={{ borderRadius: '50%' }}
-                            />
+                        <Box sx={{ mr: 3 }}>
+                            <Image src="/whyai-logo.png" alt="" width={80} height={80} style={{ borderRadius: '50%' }} />
                         </Box>
-                        <DialogContentText id="alert-dialog-description">
-                            Мы огранимичваем запросы к сервису для экономии ресурсов, однако вы можете оформить подписку, тем самым, поддержав проект!
+                        <DialogContentText>
+                            Мы ограничиваем запросы для экономии ресурсов, но вы можете оформить подписку и поддержать проект!
                         </DialogContentText>
                     </Box>
                 </DialogContent>
@@ -541,10 +484,10 @@ export default function ChatPage() {
                         variant="contained"
                         color="primary"
                         component={Link}
-                        href="https://t.me/verbiffy"
+                        href="https://localhost/profile"
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={handleCloseRateLimitDialog}
+                        onClick={() => setRateLimitDialogOpen(false)}
                         sx={{ px: 4 }}
                     >
                         Подробнее👀
