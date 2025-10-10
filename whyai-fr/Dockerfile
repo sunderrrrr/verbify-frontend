@@ -29,8 +29,8 @@ RUN npm install typescript@latest --save
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_BASE_URL=http://localhost:8090/api/v1
-NEXT_PUBLIC_APP_NAME=Verbify
+ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:8090/api/v1
+ENV NEXT_PUBLIC_APP_NAME=Verbify
 
 
 EXPOSE 3000
