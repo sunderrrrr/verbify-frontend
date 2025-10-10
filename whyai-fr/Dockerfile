@@ -23,7 +23,8 @@ COPY . .
 
 RUN npm run build
 
-RUN npm prune --production
+RUN npm install typescript@latest --save
+
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
