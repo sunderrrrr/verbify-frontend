@@ -32,8 +32,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             // Проверяем сохранение
             const savedToken = Cookies.get('authToken');
-            console.log('Токен сохранен в куках:', savedToken);
-
             // Обновляем состояние
             set({ token, isAuthenticated: true });
         } catch (error) {

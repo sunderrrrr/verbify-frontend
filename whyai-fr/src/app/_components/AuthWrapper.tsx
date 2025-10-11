@@ -21,7 +21,6 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
         const isPublicPath = publicPaths.includes(pathname);
 
         if (isPublicPath) {
-            console.log("public")
             setIsChecking(false);
             return;
         }
@@ -53,7 +52,6 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     }, [pathname, router]);
 
     if (isChecking) {
-        console.log("checking")
         return (
             <Box
                 display="flex"
