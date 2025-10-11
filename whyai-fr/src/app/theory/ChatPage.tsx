@@ -340,7 +340,6 @@ export default function ChatPage() {
                 <CircularProgress />
             </Box>
         );
-
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
 

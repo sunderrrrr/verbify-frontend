@@ -71,8 +71,7 @@ export default function TGBanner() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={handleClose}
-                    sx={{ px: 4 }}
-                >
+                    sx={{ px: 4 }}>
                     Написать
                 </Button>
             </DialogActions>
