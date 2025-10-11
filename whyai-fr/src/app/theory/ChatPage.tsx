@@ -24,7 +24,6 @@ import {
     Typography
 } from '@mui/material';
 import {ArrowBack, Close as CloseIcon, Delete, Send} from '@mui/icons-material';
-import Script from 'next/script';
 import Image from 'next/image';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -344,7 +343,6 @@ export default function ChatPage() {
 
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <Script src="https://yandex.ru/ads/system/context.js" strategy="afterInteractive" async />
 
             <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'background.paper' }}>
                 <Container maxWidth="md">
@@ -484,7 +482,7 @@ export default function ChatPage() {
                         variant="contained"
                         color="primary"
                         component={Link}
-                        href="https://localhost/profile"
+                        href="https://verbify.icu/profile"
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setRateLimitDialogOpen(false)}

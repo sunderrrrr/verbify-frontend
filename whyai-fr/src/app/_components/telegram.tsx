@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import {
+    Box,
+    Button,
     Dialog,
-    DialogTitle,
+    DialogActions,
     DialogContent,
     DialogContentText,
-    DialogActions,
-    Button,
-    IconButton,
-    Box,
-    Grid
+    DialogTitle,
+    IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
@@ -40,7 +39,7 @@ export default function TGBanner() {
         >
             <DialogTitle id="alert-dialog-title" sx={{ pb: 1 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <span>🔔 Подпишись на наш Telegram</span>
+                    <span>🔔 Поделитесь обратной связью!</span>
                     <IconButton onClick={handleClose}>
                         <CloseIcon />
                     </IconButton>
@@ -58,7 +57,8 @@ export default function TGBanner() {
                         />
                     </Box>
                     <DialogContentText id="alert-dialog-description">
-                        Получай полезные материалы, уведомления о новых функциях и обновлениях, а также следи за разработкой!
+                        Verbify только вышел и в данный момент находится на стадии открытого бета-тестирования, поэтому в работе могут происходить сбои.
+                        Вы можете помочь нашей команде: пришлите нам скриншот сбоя и его обстоятельства. Это поможет сделать наш сервис лучше! 😊
                     </DialogContentText>
                 </Box>
             </DialogContent>
@@ -67,13 +67,13 @@ export default function TGBanner() {
                     variant="contained"
                     color="primary"
                     component={Link}
-                    href="https://t.me/verbiffy"
+                    href="https://t.me/bkmz7692"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={handleClose}
                     sx={{ px: 4 }}
                 >
-                    Подписаться
+                    Написать
                 </Button>
             </DialogActions>
         </Dialog>
